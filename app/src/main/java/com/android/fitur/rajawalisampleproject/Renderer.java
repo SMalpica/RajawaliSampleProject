@@ -3,8 +3,10 @@ package com.android.fitur.rajawalisampleproject;
 import android.content.Context;
 import android.graphics.SurfaceTexture;
 import android.media.MediaPlayer;
+import android.net.Uri;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.view.SurfaceHolder;
 
 import org.rajawali3d.Object3D;
 import org.rajawali3d.cameras.ArcballCamera;
@@ -14,30 +16,39 @@ import org.rajawali3d.loader.LoaderAWD;
 import org.rajawali3d.loader.ParsingException;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.textures.ATexture;
+import org.rajawali3d.materials.textures.StreamingTexture;
 import org.rajawali3d.materials.textures.Texture;
 import org.rajawali3d.materials.textures.TextureManager;
 import org.rajawali3d.primitives.Sphere;
 import org.rajawali3d.renderer.RajawaliRenderer;
 
+import java.io.IOException;
+
 //TODO: cambiar esfera predeterminada por esfera bien hecha
-//TODO: ArcBallCamera para eventos de tacto y etcétera
-//TODO: crear una instancia del android video player normal y ponerla como imagen
+//NotTODO: ArcBallCamera para eventos de tacto y etcétera (HECHO)
+//TODO: regular touch de arcballCamera y extender para eventos de giroscopio
+//NotTODO: crear una instancia del android video player normal y ponerla como imagen
+//TODO: Anyadir controles del reproductor
+//TODO: comprobar funcionamiento video
 
 /**
  * Created by Fitur on 17/07/2015.
  */
-public class Renderer extends RajawaliRenderer{
+public class Renderer extends RajawaliRenderer {
     private Context context;
-    private DirectionalLight directionalLight;
+//    private DirectionalLight directionalLight;
     private Sphere earthSphere;
-    private ALight mLight;
+//    private ALight mLight;
     private MediaPlayer mMediaPlayer;
-    private SurfaceTexture mTexture;
+//    private SurfaceTexture mTexture;
+    StreamingTexture video;
 
     /*Default renderer constructor*/
+//    public Renderer(Context context, MediaPlayer playaux){
     public Renderer(Context context){
         super(context);
         this.context = context;
+//        this.mMediaPlayer=playaux;
         setFrameRate(60);
     }
 
@@ -78,7 +89,7 @@ public class Renderer extends RajawaliRenderer{
 //        }
 //        Object3D playSphere = awdLoader.getParsedObject();
         //set the material of the sphere
-        Material material = new Material();
+       /* Material material = new Material();
 //        material.enableLighting(true);
 //        material.setDiffuseMethod(new DiffuseMethod.Lambert());
         material.setColor(0);
@@ -89,7 +100,28 @@ public class Renderer extends RajawaliRenderer{
             material.addTexture(earthTexture);
         } catch (ATexture.TextureException error){
             Log.d("DEBUG", "TEXTURE ERROR");
+        }*/
+
+//        mMediaPlayer = MediaPlayer.create(context,R.raw.pyrex);
+        mMediaPlayer = new MediaPlayer();
+        try{
+            mMediaPlayer.setDataSource(context, Uri.parse("android.resource://"+context.getPackageName()+"/"+R.raw.pyrex));
+        }catch(IOException ex){
+            Log.e("ERROR","couldn attach data source to the media player");
         }
+        mMediaPlayer.setLooping(true);
+        video = new StreamingTexture("pyrex",mMediaPlayer);
+        mMediaPlayer.prepareAsync();
+        Material material = new Material ();
+        material.setColorInfluence(0f);
+        try{
+            material.addTexture(video);
+        }catch(ATexture.TextureException ex){
+            Log.e("ERROR","texture error when adding video to material");
+        }
+
+//        addvideo();
+
 //        playSphere.setMaterial(material);
 //        playSphere.setPosition(0, 0, 0);
 //        playSphere.setColor(Color.TRANSPARENT);
@@ -135,6 +167,8 @@ public class Renderer extends RajawaliRenderer{
         }*/
         getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(),arcballCamera);
         arcballCamera.setPosition(0,0,1);
+
+        mMediaPlayer.start();
        /* if(!arcballCamera.isInitialized()){
             Log.e("ERROR","arcball camera not initialized");
         }*/
@@ -149,5 +183,8 @@ public class Renderer extends RajawaliRenderer{
     public void onRender(final long elapsedTime, final double deltaTime) {
         super.onRender(elapsedTime, deltaTime);
 //        earthSphere.rotate(Vector3.Axis.Y, 1.0);
+        if (video != null) {
+            video.update();
+        }
     }
 }

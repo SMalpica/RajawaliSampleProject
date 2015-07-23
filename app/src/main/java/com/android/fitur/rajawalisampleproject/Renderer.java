@@ -79,8 +79,8 @@ public class Renderer extends RajawaliRenderer {
         Log.e("ESFERA", "camara mirando a " + getCurrentCamera().getLookAt());
 
 
-        ArcballCamera arcballCamera = new ArcballCamera(context,MainActivity.principal,earthSphere);
-//        mArcballCamera arcballCamera = new mArcballCamera(context,MainActivity.principal,earthSphere);
+//        ArcballCamera arcballCamera = new ArcballCamera(context,MainActivity.principal,earthSphere);
+        mArcballCamera arcballCamera = new mArcballCamera(context,MainActivity.principal,earthSphere);
         arcballCamera.setPosition(0, 0, 5);
 
         getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(), arcballCamera);

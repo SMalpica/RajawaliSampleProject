@@ -21,11 +21,11 @@ import org.rajawali3d.math.MathUtil;
  * Created by Fitur on 22/07/2015.
  */
 public class mArcballCamera extends ArcballCamera{
-    private Context mContext;
+    private Context mContext;                       //camera context
     private ScaleGestureDetector mScaleDetector;
     private View.OnTouchListener mGestureListener;
     private GestureDetector mDetector;
-    private View mView;
+    private View mView;                             //camera view
     private boolean mIsRotating;
     private boolean mIsScaling;
     private Vector3 mCameraStartPos;
@@ -36,15 +36,18 @@ public class mArcballCamera extends ArcballCamera{
     private Quaternion mStartOrientation;
     private Quaternion mCurrentOrientation;
     private Object3D mEmpty;
-    private Object3D mTarget;
+    private Object3D mTarget;                       //camera target object
     private Matrix4 mScratchMatrix;
     private Vector3 mScratchVector;
     private double mStartFOV;
 
+    /**constructor with no target*/
     public mArcballCamera(Context context, View view) {
         this(context, view, (Object3D) null);
     }
 
+    /**default arcballCamera constructor. sets the principal camera components and
+    * adds the camera main listeners*/
     public mArcballCamera(Context context, View view, Object3D target) {
         super(context,view,target);
         this.mContext = context;
@@ -54,6 +57,7 @@ public class mArcballCamera extends ArcballCamera{
         this.addListeners();
     }
 
+    /**initializes de camera components*/
     private void initialize() {
         this.mStartFOV = this.mFieldOfView;
         this.mLookAtEnabled = true;
@@ -70,10 +74,12 @@ public class mArcballCamera extends ArcballCamera{
         this.mCurrentOrientation = new Quaternion();
     }
 
+    /**sets the projection matrix*/
     public void setProjectionMatrix(int width, int height) {
         super.setProjectionMatrix(width, height);
     }
 
+    /*with the given x and y coordinates returns a 3D vector with x,y,z sphere coordinates*/
     private void mapToSphere(float x, float y, Vector3 out) {
         float lengthSquared = x * x + y * y;
         if(lengthSquared > 1.0F) {
@@ -91,14 +97,12 @@ public class mArcballCamera extends ArcballCamera{
     }
 
     private void startRotation(float x, float y) {
-        x=-x;
         this.mapToScreen(x, y, this.mPrevScreenCoord);
         this.mCurrScreenCoord.setAll(this.mPrevScreenCoord.getX(), this.mPrevScreenCoord.getY());
         this.mIsRotating = true;
     }
 
     private void updateRotation(float x, float y) {
-        x=-x;
         this.mapToScreen(x, y, this.mCurrScreenCoord);
         this.applyRotation();
     }
@@ -192,7 +196,9 @@ public class mArcballCamera extends ArcballCamera{
         }
 
         public boolean onScale(ScaleGestureDetector detector) {
-            double fov = Math.max(30.0D, Math.min(100.0D, mArcballCamera.this.mStartFOV * (1.0D / (double)detector.getScaleFactor())));
+//            double fov = Math.max(30.0D, Math.min(100.0D, mArcballCamera.this.mStartFOV * (1.0D / (double)detector.getScaleFactor())));
+            double fov = Math.max(30.0D, Math.min(54.0D, mArcballCamera.this.mStartFOV * (1.0D / (double)detector.getScaleFactor())));
+            Log.e("SCALE", "detector scale factor "+detector.getScaleFactor());
             mArcballCamera.this.setFieldOfView(fov);
             return true;
         }

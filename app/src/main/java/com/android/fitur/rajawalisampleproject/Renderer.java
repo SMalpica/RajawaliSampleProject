@@ -50,7 +50,7 @@ public class Renderer extends RajawaliRenderer {
         earthSphere = new Sphere(1, 24, 24);
         mMediaPlayer = new MediaPlayer();
         try{
-            mMediaPlayer.setDataSource(context, Uri.parse("android.resource://"+context.getPackageName()+"/"+R.raw.pyrex));
+            mMediaPlayer.setDataSource(context, Uri.parse("android.resource://" + context.getPackageName() + "/" + R.raw.pyrex));
         }catch(IOException ex){
             Log.e("ERROR","couldn attach data source to the media player");
         }
@@ -80,10 +80,12 @@ public class Renderer extends RajawaliRenderer {
 
 
         ArcballCamera arcballCamera = new ArcballCamera(context,MainActivity.principal,earthSphere);
-        arcballCamera.setPosition(0,0,5);
+//        mArcballCamera arcballCamera = new mArcballCamera(context,MainActivity.principal,earthSphere);
+        arcballCamera.setPosition(0, 0, 5);
 
-        getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(),arcballCamera);
-        arcballCamera.setPosition(0,0,1);
+        getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(), arcballCamera);
+        arcballCamera.setPosition(0, 0, 1);
+
 
         mMediaPlayer.start();
     }

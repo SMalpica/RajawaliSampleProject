@@ -18,7 +18,10 @@ import android.view.MotionEvent;
 import org.rajawali3d.math.MathUtil;
 
 /**
- * Created by Fitur on 22/07/2015.
+ * Author: Rajawali framework. Modified: Sandra Malpica Mallo
+ * Date: 22/07/2015.
+ * Class: mArcballCamera.java
+ * Comments: arcball camera used to handle motion events as well as rotate the spheric player.
  */
 public class mArcballCamera extends ArcballCamera{
     private Context mContext;                       //camera context
@@ -40,6 +43,8 @@ public class mArcballCamera extends ArcballCamera{
     private Matrix4 mScratchMatrix;                 //used to retrieve info and for storing mid-results
     private Vector3 mScratchVector;                 //used to retrieve info and for storing mid-results
     private double mStartFOV;
+    private float originalX;
+    private float originalY;
 
     /**constructor with no target*/
     public mArcballCamera(Context context, View view) {
@@ -131,11 +136,14 @@ public class mArcballCamera extends ArcballCamera{
             //rotationAngle is the acos of the vectors' dot product
             double rotationAngle = Math.acos(Math.min(1.0D, this.mPrevSphereCoord.dot(this.mCurrSphereCoord)));
             //creates a quaternion using rotantionAngle and rotationAxis (normalized)
-            this.mCurrentOrientation.fromAngleAxis(rotationAxis.inverse(), MathUtil.radiansToDegrees(-rotationAngle));
+//            this.mCurrentOrientation.fromAngleAxis(rotationAxis.inverse(), MathUtil.radiansToDegrees(-rotationAngle));
+//            rotationAxis.setAll(rotationAxis.x,rotationAxis.y,rotationAxis.z);
+            this.mCurrentOrientation.fromAngleAxis(rotationAxis, MathUtil.radiansToDegrees(rotationAngle));
             this.mCurrentOrientation.normalize();
             //accumulates start and current orientation in mEmpty object
             Quaternion q = new Quaternion(this.mStartOrientation);
             q.multiply(this.mCurrentOrientation);
+            double orientacionX = q.angleBetween(new Quaternion(0f,0f,1f,0f));
             this.mEmpty.setOrientation(q);
         }
 
@@ -255,11 +263,17 @@ public class mArcballCamera extends ArcballCamera{
 
         public boolean onScroll(MotionEvent event1, MotionEvent event2, float distanceX, float distanceY) {
             if(!mArcballCamera.this.mIsRotating) {
-                mArcballCamera.this.startRotation(event2.getX(), event2.getY());
+                mArcballCamera.this.originalX=event2.getX();
+                mArcballCamera.this.originalY=event2.getY();
+//                mArcballCamera.this.startRotation(event2.getX(), event2.getY());
+                mArcballCamera.this.startRotation(mArcballCamera.this.mLastWidth/2, mArcballCamera.this.mLastHeight/2); //0,0 es la esquina superior izquierda. Buscar centro camara en algun lugar
                 return false;
             } else {
+                float x =  Math.abs((mArcballCamera.this.originalX - event2.getX() + mArcballCamera.this.mLastWidth/2)%mArcballCamera.this.mLastWidth);
+                float y = Math.abs((mArcballCamera.this.originalY - event2.getY() + mArcballCamera.this.mLastHeight/2)%mArcballCamera.this.mLastHeight);
                 mArcballCamera.this.mIsRotating = true;
-                mArcballCamera.this.updateRotation(event2.getX(), event2.getY());
+//                mArcballCamera.this.updateRotation(event2.getX(), event2.getY());
+                mArcballCamera.this.updateRotation(x, y);
                 return false;
             }
         }

@@ -131,7 +131,7 @@ public class mArcballCamera extends ArcballCamera{
             //rotationAngle is the acos of the vectors' dot product
             double rotationAngle = Math.acos(Math.min(1.0D, this.mPrevSphereCoord.dot(this.mCurrSphereCoord)));
             //creates a quaternion using rotantionAngle and rotationAxis (normalized)
-            this.mCurrentOrientation.fromAngleAxis(rotationAxis, MathUtil.radiansToDegrees(-rotationAngle));
+            this.mCurrentOrientation.fromAngleAxis(rotationAxis.inverse(), MathUtil.radiansToDegrees(-rotationAngle));
             this.mCurrentOrientation.normalize();
             //accumulates start and current orientation in mEmpty object
             Quaternion q = new Quaternion(this.mStartOrientation);

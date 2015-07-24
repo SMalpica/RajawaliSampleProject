@@ -37,8 +37,8 @@ public class mArcballCamera extends ArcballCamera{
     private Quaternion mCurrentOrientation;
     private Object3D mEmpty;
     private Object3D mTarget;                       //camera target object
-    private Matrix4 mScratchMatrix;
-    private Vector3 mScratchVector;
+    private Matrix4 mScratchMatrix;                 //used to retrieve info and for storing mid-results
+    private Vector3 mScratchVector;                 //used to retrieve info and for storing mid-results
     private double mStartFOV;
 
     /**constructor with no target*/
@@ -91,36 +91,49 @@ public class mArcballCamera extends ArcballCamera{
 
     }
 
+    /**with the given x and y coordinates returns a 2D vector with x,y screen coordinates*/
     private void mapToScreen(float x, float y, Vector2 out) {
         out.setX((double)((2.0F * x - (float)this.mLastWidth) / (float)this.mLastWidth));
         out.setY((double)(-(2.0F * y - (float)this.mLastHeight) / (float)this.mLastHeight));
     }
 
+    /**maps initial x and y touch event coordinates to <mPrevScreenCoord/> and then copies it to
+     * mCurrScreenCoord */
     private void startRotation(float x, float y) {
         this.mapToScreen(x, y, this.mPrevScreenCoord);
         this.mCurrScreenCoord.setAll(this.mPrevScreenCoord.getX(), this.mPrevScreenCoord.getY());
         this.mIsRotating = true;
     }
 
+
+    /**updates <mCurrScreenCoord/> to new screen mapped x and y and then applies rotation*/
     private void updateRotation(float x, float y) {
         this.mapToScreen(x, y, this.mCurrScreenCoord);
         this.applyRotation();
     }
 
+    /** rotates the sphere? when the rotation move ends it multiplies by the original start orientation
+     * accumulates 2 rotations*/
     private void endRotation() {
         this.mStartOrientation.multiply(this.mCurrentOrientation);
     }
 
+    /** applies the rotation to the target object*/
     private void applyRotation() {
         if(this.mIsRotating) {
+            //maps to sphere coordinates previous and current position
             this.mapToSphere((float) this.mPrevScreenCoord.getX(), (float) this.mPrevScreenCoord.getY(), this.mPrevSphereCoord);
             this.mapToSphere((float) this.mCurrScreenCoord.getX(), (float) this.mCurrScreenCoord.getY(), this.mCurrSphereCoord);
+            //rotationAxis is the crossproduct between the two resultant vectors (normalized)
             Vector3 rotationAxis = this.mPrevSphereCoord.clone();
             rotationAxis.cross(this.mCurrSphereCoord);
             rotationAxis.normalize();
+            //rotationAngle is the acos of the vectors' dot product
             double rotationAngle = Math.acos(Math.min(1.0D, this.mPrevSphereCoord.dot(this.mCurrSphereCoord)));
-            this.mCurrentOrientation.fromAngleAxis(rotationAxis, MathUtil.radiansToDegrees(rotationAngle));
+            //creates a quaternion using rotantionAngle and rotationAxis (normalized)
+            this.mCurrentOrientation.fromAngleAxis(rotationAxis, MathUtil.radiansToDegrees(-rotationAngle));
             this.mCurrentOrientation.normalize();
+            //accumulates start and current orientation in mEmpty object
             Quaternion q = new Quaternion(this.mStartOrientation);
             q.multiply(this.mCurrentOrientation);
             this.mEmpty.setOrientation(q);
@@ -128,17 +141,21 @@ public class mArcballCamera extends ArcballCamera{
 
     }
 
+    /**returns the object's view matrix (used in the renderer.Onrender method)*/
     public Matrix4 getViewMatrix() {
         Matrix4 m = super.getViewMatrix();
+        //if the camera has a target take its position into mScratchMatrix and store in <m>
         if(this.mTarget != null) {
             this.mScratchMatrix.identity();
             this.mScratchMatrix.translate(this.mTarget.getPosition());
             m.multiply(this.mScratchMatrix);
         }
 
+        //take also orientation from empty object (used in applyRotation) into m
         this.mScratchMatrix.identity();
         this.mScratchMatrix.rotate(this.mEmpty.getOrientation());
         m.multiply(this.mScratchMatrix);
+        //if the camera has target take the position inverse and translate to m
         if(this.mTarget != null) {
             this.mScratchVector.setAll(this.mTarget.getPosition());
             this.mScratchVector.inverse();
@@ -150,7 +167,10 @@ public class mArcballCamera extends ArcballCamera{
         return m;
     }
 
+
+    /** sets the camera's field of view (focal distance)*/
     public void setFieldOfView(double fieldOfView) {
+        //lock the frustrum and change the field of view
         Object var3 = this.mFrustumLock;
         synchronized(this.mFrustumLock) {
             this.mStartFOV = fieldOfView;
@@ -158,17 +178,25 @@ public class mArcballCamera extends ArcballCamera{
         }
     }
 
+    /** adds the basic listeners to the camera*/
     private void addListeners() {
+        //runs this on the ui thread
         ((Activity)this.mContext).runOnUiThread(new Runnable() {
             public void run() {
+                //sets a gesture detector (touch)
                 mArcballCamera.this.mDetector = new GestureDetector(mArcballCamera.this.mContext, mArcballCamera.this.new GestureListener());
+                //sets a scale detector (zoom)
                 mArcballCamera.this.mScaleDetector = new ScaleGestureDetector(mArcballCamera.this.mContext, mArcballCamera.this.new ScaleListener());
+                //sets a touch listener
                 mArcballCamera.this.mGestureListener = new View.OnTouchListener() {
                     public boolean onTouch(View v, MotionEvent event) {
+                        //sees if it is a scale event
                         mArcballCamera.this.mScaleDetector.onTouchEvent(event);
                         if(!mArcballCamera.this.mIsScaling) {
+                            //if not, delivers the event to the movement detector to start rotation
                             mArcballCamera.this.mDetector.onTouchEvent(event);
                             if(event.getAction() == 1 && mArcballCamera.this.mIsRotating) {
+                                //ends the rotation if the event ended
                                 mArcballCamera.this.endRotation();
                                 mArcballCamera.this.mIsRotating = false;
                             }
@@ -177,26 +205,31 @@ public class mArcballCamera extends ArcballCamera{
                         return true;
                     }
                 };
+                //sets the touch listener
                 mArcballCamera.this.mView.setOnTouchListener(mArcballCamera.this.mGestureListener);
             }
         });
     }
 
+    /**sets the camera target*/
     public void setTarget(Object3D target) {
         this.mTarget = target;
         this.setLookAt(this.mTarget.getPosition());
     }
 
+    /*returns the camera target*/
     public Object3D getTarget() {
         return this.mTarget;
     }
 
+    /*scale listener*/
     private class ScaleListener extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         private ScaleListener() {
         }
 
         public boolean onScale(ScaleGestureDetector detector) {
 //            double fov = Math.max(30.0D, Math.min(100.0D, mArcballCamera.this.mStartFOV * (1.0D / (double)detector.getScaleFactor())));
+            //scale adjusted so that the edges of the sphere dont appear in the screen
             double fov = Math.max(30.0D, Math.min(54.0D, mArcballCamera.this.mStartFOV * (1.0D / (double)detector.getScaleFactor())));
             Log.e("SCALE", "detector scale factor "+detector.getScaleFactor());
             mArcballCamera.this.setFieldOfView(fov);
@@ -215,6 +248,7 @@ public class mArcballCamera extends ArcballCamera{
         }
     }
 
+    /*gesture listener*/
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         private GestureListener() {
         }

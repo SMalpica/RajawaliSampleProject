@@ -17,7 +17,7 @@ import java.io.IOException;
 
 //TODO: cambiar esfera predeterminada por esfera bien hecha
 //NotTODO: ArcBallCamera para eventos de tacto y etcétera (HECHO)
-//TODO: regular touch de arcballCamera y extender para eventos de giroscopio
+//TODO: regular touch de arcballCamera y extender para eventos de giroscopio (add button)
 //NotTODO: crear una instancia del android video player normal y ponerla como imagen
 //TODO: Anyadir controles del reproductor
 //TODO: comprobar funcionamiento video

@@ -8,6 +8,7 @@ import android.view.MotionEvent;
 
 import org.rajawali3d.Object3D;
 import org.rajawali3d.cameras.ArcballCamera;
+import org.rajawali3d.cameras.Camera;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.StreamingTexture;
@@ -92,14 +93,15 @@ public class Renderer extends RajawaliRenderer {
 
         //create the arcball camera and target the sphere
 //        mArcballCamera arcballCamera = new mArcballCamera(context,MainActivity.principal,earthSphere);
-        CamaraActualizada arcballCamera = new CamaraActualizada(context,MainActivity.principal,earthSphere);
+//        CamaraActualizada arcballCamera = new CamaraActualizada(context,MainActivity.principal,earthSphere);
+        NuevaCamara arcballCamera = new NuevaCamara(context,MainActivity.principal,earthSphere);
         Log.e("CAMARA","camara creada");
 //        ArcballCamera arcballCamera = new ArcballCamera(context,MainActivity.principal,earthSphere);
-        arcballCamera.setPosition(0, 0, 5);
+//        arcballCamera.setPosition(0, 0, 5);
         Log.e("CAMARA","camara movida");
         //switch cameras
-        getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(), arcballCamera);
-        arcballCamera.setPosition(0, 0, 1);
+//        getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(), arcballCamera);
+        arcballCamera.setPosition(7, 7, -0.5);
         Log.e("CAMARA", "switch camara");
         //start the player
         mMediaPlayer.start();

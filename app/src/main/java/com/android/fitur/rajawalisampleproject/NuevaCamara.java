@@ -12,6 +12,7 @@ import android.view.WindowManager;
 
 import org.rajawali3d.Object3D;
 import org.rajawali3d.cameras.ArcballCamera;
+import org.rajawali3d.cameras.Camera;
 import org.rajawali3d.math.MathUtil;
 import org.rajawali3d.math.Matrix;
 import org.rajawali3d.math.Matrix4;
@@ -22,7 +23,7 @@ import org.rajawali3d.math.vector.Vector3;
 /**
  * Created by Fitur on 27/07/2015.
  */
-public class CamaraActualizada extends ArcballCamera{
+public class NuevaCamara extends Camera {
 
     private Context mContext;
     private ScaleGestureDetector mScaleDetector;
@@ -67,12 +68,13 @@ public class CamaraActualizada extends ArcballCamera{
 //    private final double[] mCurrentRotation = new double[16];
     /******************************/
 
-    public CamaraActualizada(Context context, View view) {
+    public NuevaCamara(Context context, View view) {
         this(context, view, null);
     }
 
-    public CamaraActualizada(Context context, View view, Object3D target) {
-        super(context,view,target);
+    public NuevaCamara(Context context, View view, Object3D target) {
+        super();
+//        super(context,view,target);
         mContext = context;
         mTarget = target;
         mView = view;
@@ -494,7 +496,7 @@ public class CamaraActualizada extends ArcballCamera{
             extends ScaleGestureDetector.SimpleOnScaleGestureListener {
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
-            double fov = Math.max(30.0D, Math.min(54.0D, CamaraActualizada.this.mStartFOV * (1.0D / (double)detector.getScaleFactor())));
+            double fov = Math.max(30.0D, Math.min(54.0D, NuevaCamara.this.mStartFOV * (1.0D / (double)detector.getScaleFactor())));
             setFieldOfView(fov);
             return true;
         }
@@ -683,3 +685,4 @@ public boolean onTouchEvent(MotionEvent event)
     _modelViewProjectionMatrix = GLKMatrix4Multiply(projectionMatrix, modelViewMatrix);
         */
 }
+

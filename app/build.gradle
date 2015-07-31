@@ -22,5 +22,5 @@ android {
 dependencies {
     compile fileTree(dir: 'libs', include: ['*.jar'])
     compile 'com.android.support:appcompat-v7:22.2.0'
-    compile 'org.rajawali3d:rajawali:1.0.232-SNAPSHOT@aar'
+    compile 'org.rajawali3d:rajawali:1.0.294-SNAPSHOT@aar'
 }

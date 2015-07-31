@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 
 import org.rajawali3d.Object3D;
+import org.rajawali3d.cameras.ArcballCamera;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.StreamingTexture;
@@ -20,7 +21,8 @@ import java.io.IOException;
 //TODO: regular touch de arcballCamera(VIP) y extender para eventos de giroscopio (add button)
 //NotTODO: crear una instancia del android video player normal y ponerla como imagen
 //TODO: Anyadir controles del reproductor
-//TODO: comprobar funcionamiento video
+//notTODO: comprobar funcionamiento video. EL vídeo va bien.
+//TODO: arreglar glitch en touch al pasar del centro de la pantalla
 
 /**
  * Author: Sandra Malpica Mallo
@@ -89,21 +91,30 @@ public class Renderer extends RajawaliRenderer {
         Log.e("ESFERA", "camara mirando a " + getCurrentCamera().getLookAt());
 
         //create the arcball camera and target the sphere
-        mArcballCamera arcballCamera = new mArcballCamera(context,MainActivity.principal,earthSphere);
+//        mArcballCamera arcballCamera = new mArcballCamera(context,MainActivity.principal,earthSphere);
+        CamaraActualizada arcballCamera = new CamaraActualizada(context,MainActivity.principal,earthSphere);
+        Log.e("CAMARA","camara creada");
+//        ArcballCamera arcballCamera = new ArcballCamera(context,MainActivity.principal,earthSphere);
         arcballCamera.setPosition(0, 0, 5);
+        Log.e("CAMARA","camara movida");
         //switch cameras
         getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(), arcballCamera);
         arcballCamera.setPosition(0, 0, 1);
+        Log.e("CAMARA", "switch camara");
         //start the player
         mMediaPlayer.start();
+        Log.e("CAMARA", "player start");
     }
 
     /*update the video texture on rendering*/
     @Override
     public void onRender(final long elapsedTime, final double deltaTime) {
         super.onRender(elapsedTime, deltaTime);
+//        Log.e("CAMARA", "super onRender");
         if (video != null) {
             video.update();
+//            Log.e("CAMARA", "video updated");
         }
+//        android.opengl.GLES20.glFlush();
     }
 }

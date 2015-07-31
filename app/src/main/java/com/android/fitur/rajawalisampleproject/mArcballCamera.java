@@ -9,6 +9,7 @@ import android.view.View;
 import org.rajawali3d.Object3D;
 import org.rajawali3d.cameras.ArcballCamera;
 import org.rajawali3d.math.Matrix4;
+import org.rajawali3d.math.Plane;
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector2;
 import org.rajawali3d.math.vector.Vector3;
@@ -38,6 +39,7 @@ public class mArcballCamera extends ArcballCamera{
     private Vector2 mCurrScreenCoord;
     private Quaternion mStartOrientation;
     private Quaternion mCurrentOrientation;
+    private Quaternion orientacionAnterior;
     private Object3D mEmpty;
     private Object3D mTarget;                       //camera target object
     private Matrix4 mScratchMatrix;                 //used to retrieve info and for storing mid-results
@@ -45,6 +47,9 @@ public class mArcballCamera extends ArcballCamera{
     private double mStartFOV;
     private float originalX;
     private float originalY;
+    private Vector3 xAxis;
+    private Vector3 yAxis;
+    private Vector3 zAxis;
 
     /**constructor with no target*/
     public mArcballCamera(Context context, View view) {
@@ -77,6 +82,9 @@ public class mArcballCamera extends ArcballCamera{
         this.mCurrScreenCoord = new Vector2();
         this.mStartOrientation = new Quaternion();
         this.mCurrentOrientation = new Quaternion();
+        this.xAxis = new Vector3(1,0,0);
+        this.yAxis = new Vector3(0,1,0);
+        this.zAxis = new Vector3(0,0,1);
     }
 
     /**sets the projection matrix*/
@@ -98,7 +106,7 @@ public class mArcballCamera extends ArcballCamera{
 
     /**with the given x and y coordinates returns a 2D vector with x,y screen coordinates*/
     private void mapToScreen(float x, float y, Vector2 out) {
-        out.setX((double)((2.0F * x - (float)this.mLastWidth) / (float)this.mLastWidth));
+        out.setX((double) ((2.0F * x - (float) this.mLastWidth) / (float) this.mLastWidth));
         out.setY((double)(-(2.0F * y - (float)this.mLastHeight) / (float)this.mLastHeight));
     }
 
@@ -138,15 +146,43 @@ public class mArcballCamera extends ArcballCamera{
             //creates a quaternion using rotantionAngle and rotationAxis (normalized)
 //            this.mCurrentOrientation.fromAngleAxis(rotationAxis.inverse(), MathUtil.radiansToDegrees(-rotationAngle));
 //            rotationAxis.setAll(rotationAxis.x,rotationAxis.y,rotationAxis.z);
-            this.mCurrentOrientation.fromAngleAxis(rotationAxis, MathUtil.radiansToDegrees(rotationAngle));
+            this.mCurrentOrientation.fromAngleAxis(rotationAxis.inverse(), MathUtil.radiansToDegrees(-rotationAngle));
             this.mCurrentOrientation.normalize();
             //accumulates start and current orientation in mEmpty object
             Quaternion q = new Quaternion(this.mStartOrientation);
             q.multiply(this.mCurrentOrientation);
-            double orientacionX = q.angleBetween(new Quaternion(0f,0f,1f,0f));
+            double orientacionX = q.angleBetween(new Quaternion(1f,0f,0f,0f));
+            double orientacionY = q.angleBetween(new Quaternion(0f,1f,0f,0f));
+            double orientacionZ = q.angleBetween(new Quaternion(0f, 0f, 1f, 0f));
+            Log.e("ROTACION","angulo con x "+orientacionX);
+            Log.e("ROTACION","angulo con y "+orientacionY);
+            Log.e("ROTACION","angulo con z "+orientacionZ);
+            q=corregirRotacion(orientacionX,orientacionY,orientacionZ,q);
             this.mEmpty.setOrientation(q);
+            this.orientacionAnterior=q;
         }
 
+    }
+
+    /**Corrects the orientation so that the sphere doesn't flip upside down*/
+    private Quaternion corregirRotacion(double orientacionX, double orientacionY, double orientacionZ, Quaternion q){
+        if((orientacionX > 0.9 && Math.abs(orientacionY-1)<0.2 && orientacionZ>0.75) ||
+                (orientacionX > 1 && Math.abs(orientacionY-1)<0.3 && orientacionZ>1.5) ){
+//            this.mEmpty.getOrientation(q);  //take the previous orientation
+            if(orientacionAnterior!=null){
+                q=orientacionAnterior;
+                Log.e("ORIENTACION","cambio hecho");
+            }
+        }
+//        return q;
+        q.getXAxis();
+        q.getYAxis();
+        q.getZAxis();
+        Log.e("ORIENTACION", "eje x " + q.getXAxis().toString());
+
+        Plane plane = new Plane(yAxis,zAxis,zAxis.inverse());
+        Log.e("ORIENTACION", "distancia al eje y "+plane.getDistanceTo(q.getYAxis()));
+        return q;
     }
 
     /**returns the object's view matrix (used in the renderer.Onrender method)*/
@@ -269,8 +305,8 @@ public class mArcballCamera extends ArcballCamera{
                 mArcballCamera.this.startRotation(mArcballCamera.this.mLastWidth/2, mArcballCamera.this.mLastHeight/2); //0,0 es la esquina superior izquierda. Buscar centro camara en algun lugar
                 return false;
             } else {
-                float x =  Math.abs((mArcballCamera.this.originalX - event2.getX() + mArcballCamera.this.mLastWidth/2)%mArcballCamera.this.mLastWidth);
-                float y = Math.abs((mArcballCamera.this.originalY - event2.getY() + mArcballCamera.this.mLastHeight/2)%mArcballCamera.this.mLastHeight);
+                float x =  (mArcballCamera.this.mLastWidth/2) - (event2.getX() - mArcballCamera.this.originalX);
+                float y = (mArcballCamera.this.mLastHeight/2) - (event2.getY() - mArcballCamera.this.originalY);
                 mArcballCamera.this.mIsRotating = true;
 //                mArcballCamera.this.updateRotation(event2.getX(), event2.getY());
                 mArcballCamera.this.updateRotation(x, y);

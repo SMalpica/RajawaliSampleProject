@@ -158,24 +158,25 @@ public class CamaraActualizada extends ArcballCamera{
     private void applyRotation(float x, float y){
         this.gradosxpixelX = gbarridoX/mLastWidth;
         this.gradosxpixelY = gbarridoY/mLastHeight;
-        Log.e("NUEVO","grados x "+x+" "+ this.xAnterior+"  "+this.gradosxpixelX);
+//        Log.e("NUEVO","grados x "+x+" "+ this.xAnterior+"  "+this.gradosxpixelX);
         double gradosX = (x - this.xAnterior)*this.gradosxpixelX; //rotation around Y axis - yaw
         double gradosY = (y - this.yAnterior)*this.gradosxpixelY; //rotation around X axis - pitch
-        Log.e("NUEVO","x "+gradosX+" y "+y);
+//        Log.e("NUEVO","x "+gradosX+" y "+y);
         if(this.mIsRotating) {
-            this.mCurrentOrientation.fromEuler(aRadianes(gradosX), aRadianes(gradosY), 0);
+            this.mCurrentOrientation.fromEuler(gradosX, gradosY, 0);
+            Log.e("NUEVO","x w current pre normalize roll"+mCurrentOrientation.getRoll());
             this.mCurrentOrientation.normalize();
-            Log.e("NUEVO","x q"+mCurrentOrientation.getRoll());
+            Log.e("NUEVO","x q current post normalize roll"+mCurrentOrientation.getRoll());
             Quaternion q = new Quaternion(this.mStartOrientation);
             q.multiply(this.mCurrentOrientation);
-            normalizedQuaternion(q);
+//            normalizedQuaternion(q);
             this.mEmpty.setOrientation(q);
         }
     }
 
-    private double aRadianes(double grados){
-        return (grados*2*Math.PI*75)/360.0;
-    }
+//    private double aRadianes(double grados){
+//        return (grados*2*Math.PI*75)/360.0;
+//    }
 
     private void endRotation()
     {

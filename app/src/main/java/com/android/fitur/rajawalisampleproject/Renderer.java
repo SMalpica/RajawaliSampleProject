@@ -12,6 +12,7 @@ import org.rajawali3d.cameras.Camera;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.StreamingTexture;
+import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.primitives.Sphere;
 import org.rajawali3d.renderer.RajawaliRenderer;
 
@@ -93,19 +94,28 @@ public class Renderer extends RajawaliRenderer {
 
         //create the arcball camera and target the sphere
 //        mArcballCamera arcballCamera = new mArcballCamera(context,MainActivity.principal,earthSphere);
-//        CamaraActualizada arcballCamera = new CamaraActualizada(context,MainActivity.principal,earthSphere);
-        NuevaCamara arcballCamera = new NuevaCamara(context,MainActivity.principal,earthSphere);
-        Log.e("CAMARA","camara creada");
+        CamaraActualizada arcballCamera = new CamaraActualizada(context,MainActivity.principal,earthSphere);
+//        Cam2d arcballCamera = new Cam2d(context, MainActivity.principal,earthSphere);
+//        NuevaCamara arcballCamera = new NuevaCamara(context,MainActivity.principal,earthSphere);
+        Log.e("CAMARA", "camara creada");
 //        ArcballCamera arcballCamera = new ArcballCamera(context,MainActivity.principal,earthSphere);
 //        arcballCamera.setPosition(0, 0, 5);
-        Log.e("CAMARA","camara movida");
+        Log.e("CAMARA", "camara movida");
         //switch cameras
-//        getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(), arcballCamera);
-        arcballCamera.setPosition(7, 7, -0.5);
+        getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(), arcballCamera);
+        arcballCamera.setPosition(0, 0, 1);
         Log.e("CAMARA", "switch camara");
         //start the player
         mMediaPlayer.start();
         Log.e("CAMARA", "player start");
+
+//        Matrix4 projection = new Matrix4();
+//        arcballCamera.getProjectionMatrix();
+
+        arcballCamera.setProjectionMatrix(getViewportWidth(),getViewportHeight());
+        for(int i=0; i<16; i++){
+            Log.e("PROY", "elemento "+i+" "+arcballCamera.getProjectionMatrix().getDoubleValues()[i]);
+        }
     }
 
     /*update the video texture on rendering*/
@@ -117,6 +127,7 @@ public class Renderer extends RajawaliRenderer {
             video.update();
 //            Log.e("CAMARA", "video updated");
         }
+        getCurrentCamera().setCameraRoll(0);
 //        android.opengl.GLES20.glFlush();
     }
 }

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="bottom"
+    >
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#010101"
+        android:alpha="0.5"
+        android:layout_marginLeft="50dp"
+        android:layout_marginRight="50dp"
+        android:layout_marginBottom="10dp"
+        android:gravity="center_horizontal">
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/backbutton"
+                android:layout_gravity="bottom|left"
+                android:contentDescription="back player button"
+                android:src="@drawable/back"
+                android:paddingRight="20dp"
+                android:layout_alignParentLeft="true" />
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/playbutton"
+                android:layout_gravity="bottom|center_horizontal"
+                android:contentDescription="play player button"
+                android:enabled="false"
+                android:background="@drawable/ic_play_pause"
+                android:textOn=""
+                android:textOff=""
+                android:paddingRight="30dp"
+                android:gravity="center_horizontal"
+                android:layout_centerVertical="true"
+                android:layout_centerHorizontal="true" />
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/modebutton"
+                android:layout_gravity="bottom|right"
+                android:contentDescription="mode player button"
+                android:src="@drawable/ic_modes"
+                android:layout_alignParentRight="true"/>
+
+        </RelativeLayout>
+
+
+
+        <SeekBar
+            android:layout_width="wrap_content"
+            android:layout_height="0dp"
+            android:id="@+id/seekBar"
+            android:layout_weight="1"
+            android:progressDrawable="@drawable/thumb"
+            android:focusable="true"
+            android:focusableInTouchMode="true" />
+
+    </LinearLayout>
+
+
+
+
+</LinearLayout>

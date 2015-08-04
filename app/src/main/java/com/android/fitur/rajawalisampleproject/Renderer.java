@@ -5,6 +5,9 @@ import android.media.MediaPlayer;
 import android.net.Uri;
 import android.util.Log;
 import android.view.MotionEvent;
+import android.widget.ImageButton;
+import android.widget.MediaController;
+import android.widget.ToggleButton;
 
 import org.rajawali3d.Object3D;
 import org.rajawali3d.cameras.ArcballCamera;
@@ -24,7 +27,9 @@ import java.io.IOException;
 //NotTODO: crear una instancia del android video player normal y ponerla como imagen
 //TODO: Anyadir controles del reproductor
 //notTODO: comprobar funcionamiento video. EL vídeo va bien.
-//TODO: arreglar glitch en touch al pasar del centro de la pantalla
+//TODO: arreglar inclinacion del video
+//TODO: uses-permission android:name="android.permission.WAKE_LOCK" evitar q pantalla se bloquee
+//TODO: cambiar de proyeccion fisheye a rectilinea
 
 /**
  * Author: Sandra Malpica Mallo
@@ -127,7 +132,13 @@ public class Renderer extends RajawaliRenderer {
             video.update();
 //            Log.e("CAMARA", "video updated");
         }
-        getCurrentCamera().setCameraRoll(0);
+//        getCurrentCamera().setCameraRoll(0);
+//        earthSphere.setRotZ(0);
+//        Log.e("ROT","correccion");
 //        android.opengl.GLES20.glFlush();
+    }
+
+    public MediaPlayer getMediaPlayer(){
+        return this.mMediaPlayer;
     }
 }

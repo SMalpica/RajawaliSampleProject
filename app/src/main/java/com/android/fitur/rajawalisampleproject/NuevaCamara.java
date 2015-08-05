@@ -316,6 +316,7 @@ public class NuevaCamara extends Camera {
 
     @Override
     public Matrix4 getViewMatrix() {
+//        this.setCameraRoll(0); //doesn't work.
         Matrix4 m = super.getViewMatrix();
         if(this.mTarget != null) {
             this.mScratchMatrix.identity();

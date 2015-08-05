@@ -2,12 +2,16 @@ package com.android.fitur.rajawalisampleproject;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.media.Image;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.MediaController;
 
 import org.rajawali3d.surface.RajawaliSurfaceView;
@@ -46,7 +50,34 @@ public class MainActivity extends Activity{
         LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());
         layoutInflater.inflate(R.layout.player_control, null);
         ViewGroup viewGroup = (ViewGroup)getWindow().getDecorView().findViewById(android.R.id.content);
-        viewGroup.addView(layoutInflater.inflate(R.layout.player_control, null));
+        LinearLayout view = (LinearLayout)layoutInflater.inflate(R.layout.player_control, null);
+        view.setVerticalGravity(Gravity.BOTTOM);
+        viewGroup.addView(view);
+
+        final ImageButton playButton = (ImageButton) view.findViewById(R.id.playbutton);
+        ImageButton backButton = (ImageButton) view.findViewById(R.id.backbutton);
+        ImageButton modeButton = (ImageButton) view.findViewById(R.id.modebutton);
+//        playButton.setMinimumHeight(backButton.getHeight());
+//        modeButton.setMinimumHeight(backButton.getHeight());
+        playButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(renderer.getMediaPlayer().isPlaying()){
+                    renderer.getMediaPlayer().pause();
+                    playButton.setImageLevel(1);
+//                    playButton.refreshDrawableState();
+//                    playButton.setImageResource(R.drawable.playback_play);
+//                    playButton.setBackgroundResource(0);
+//                    playButton.setImageDrawable(getApplicationContext().getResources().getDrawable(R.drawable.playback_play));
+                }else{
+                    renderer.getMediaPlayer().start();
+                    playButton.setImageLevel(0);
+//                    playButton.setImageResource(R.drawable.playback_pause);
+//                    playButton.setImageDrawable(getApplicationContext().getResources().getDrawable(R.drawable.playback_pause));
+                }
+            }
+        });
+
     }
 
     @Override

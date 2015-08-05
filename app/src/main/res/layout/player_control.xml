@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="fill_parent"
+    android:orientation="vertical" android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_gravity="bottom"
     >
 
 
     <LinearLayout
-        android:layout_width="match_parent"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="vertical"
         android:background="#010101"
@@ -20,7 +20,9 @@
         <RelativeLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:paddingRight="5dp"
+            android:paddingTop="2dp">
 
             <ImageButton
                 android:layout_width="wrap_content"
@@ -29,8 +31,9 @@
                 android:layout_gravity="bottom|left"
                 android:contentDescription="back player button"
                 android:src="@drawable/back"
-                android:paddingRight="20dp"
-                android:layout_alignParentLeft="true" />
+                android:layout_marginLeft="10dp"
+                android:layout_alignParentLeft="true"
+                android:background="@android:color/transparent" />
 
             <ImageButton
                 android:layout_width="wrap_content"
@@ -39,13 +42,16 @@
                 android:layout_gravity="bottom|center_horizontal"
                 android:contentDescription="play player button"
                 android:enabled="false"
-                android:background="@drawable/ic_play_pause"
+                android:src="@drawable/ic_play_pause"
                 android:textOn=""
                 android:textOff=""
                 android:paddingRight="30dp"
                 android:gravity="center_horizontal"
                 android:layout_centerVertical="true"
-                android:layout_centerHorizontal="true" />
+                android:layout_centerHorizontal="true"
+                android:clickable="true"
+                android:focusable="true"
+                android:background="@android:color/transparent" />
 
             <ImageButton
                 android:layout_width="wrap_content"
@@ -54,7 +60,8 @@
                 android:layout_gravity="bottom|right"
                 android:contentDescription="mode player button"
                 android:src="@drawable/ic_modes"
-                android:layout_alignParentRight="true"/>
+                android:layout_alignParentRight="true"
+                android:background="@android:color/transparent" />
 
         </RelativeLayout>
 

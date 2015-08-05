@@ -30,6 +30,15 @@ import java.io.IOException;
 //TODO: arreglar inclinacion del video
 //TODO: uses-permission android:name="android.permission.WAKE_LOCK" evitar q pantalla se bloquee
 //TODO: cambiar de proyeccion fisheye a rectilinea
+//TODO: ajustar size iconos playerControl. Cardboard demasiado grande, play small.
+//TODO: funcionalidad del backButton.
+//TODO: cambiar apariencia del seekBar. El default es feo con ganas.
+//TODO: actualizar seekBar cada segundo.
+//TODO: modo giroscopo.
+//TODO: modo cardboard.
+//TODO: linkear con app principal.
+//TODO: add animaciones o efectos en los elementos con los que el usuario puede interactuar.
+//TODO: hacer que el control del video se desvanezca con inactividad / desaparezca con click.
 
 /**
  * Author: Sandra Malpica Mallo
@@ -43,6 +52,7 @@ public class Renderer extends RajawaliRenderer {
     private Sphere earthSphere;     //sphere where the video will be displayed
     private MediaPlayer mMediaPlayer;   //mediaPLayer that holds the video
     StreamingTexture video;         //video texture to project on the sphere
+    public int videoLength;         //video length in ms
 
     /**Renderer constructor, initializes its main values*/
     public Renderer(Context context){
@@ -121,6 +131,8 @@ public class Renderer extends RajawaliRenderer {
         for(int i=0; i<16; i++){
             Log.e("PROY", "elemento "+i+" "+arcballCamera.getProjectionMatrix().getDoubleValues()[i]);
         }
+
+        videoLength=mMediaPlayer.getDuration();
     }
 
     /*update the video texture on rendering*/

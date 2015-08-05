@@ -4,6 +4,7 @@ import android.app.ActionBar;
 import android.app.Activity;
 import android.media.Image;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -13,8 +14,11 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
+import android.widget.SeekBar;
 
 import org.rajawali3d.surface.RajawaliSurfaceView;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Author: Sandra Malpica Mallo
@@ -22,11 +26,12 @@ import org.rajawali3d.surface.RajawaliSurfaceView;
  * Class: MainActivity.java
  * Comments: main app class, holds main activity. Creates a rajawali surface and sets things up.
  */
-public class MainActivity extends Activity{
+public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener{
 
     Renderer renderer;  //openGL renderer
     RajawaliSurfaceView surface;    //surface
     public static View principal;   //surface
+    private int modo=0;
 
     /*method called when the activity is created*/
     @Override
@@ -56,28 +61,88 @@ public class MainActivity extends Activity{
 
         final ImageButton playButton = (ImageButton) view.findViewById(R.id.playbutton);
         ImageButton backButton = (ImageButton) view.findViewById(R.id.backbutton);
-        ImageButton modeButton = (ImageButton) view.findViewById(R.id.modebutton);
-//        playButton.setMinimumHeight(backButton.getHeight());
-//        modeButton.setMinimumHeight(backButton.getHeight());
+        final ImageButton modeButton = (ImageButton) view.findViewById(R.id.modebutton);
+        final SeekBar seekBar = (SeekBar) view.findViewById(R.id.seekBar);
+
         playButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 if(renderer.getMediaPlayer().isPlaying()){
                     renderer.getMediaPlayer().pause();
                     playButton.setImageLevel(1);
-//                    playButton.refreshDrawableState();
-//                    playButton.setImageResource(R.drawable.playback_play);
-//                    playButton.setBackgroundResource(0);
-//                    playButton.setImageDrawable(getApplicationContext().getResources().getDrawable(R.drawable.playback_play));
                 }else{
                     renderer.getMediaPlayer().start();
                     playButton.setImageLevel(0);
-//                    playButton.setImageResource(R.drawable.playback_pause);
-//                    playButton.setImageDrawable(getApplicationContext().getResources().getDrawable(R.drawable.playback_pause));
                 }
             }
         });
 
+
+        modeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                MainActivity.this.modo = (MainActivity.this.modo+1)%3;
+
+                switch (MainActivity.this.modo){
+                    case 0:         //TOUCH MODE
+                        modeButton.setImageLevel(0);
+                        break;
+                    case 1:         //GYROSCOPE MODE
+                        modeButton.setImageLevel(1);
+                        break;
+                    case 2:         //CARDBOARD MODE
+                        modeButton.setImageLevel(2);
+                        break;
+                }
+            }
+        });
+
+        backButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                System.runFinalization();
+                System.exit(0); //cerrar el sistema. TODO: volver a Activity principal
+            }
+        });
+
+        /*seekBar tutorial from http://sapandiwakar.in/tutorial-how-to-manually-create-android-media-player-controls/ */
+        seekBar.setOnSeekBarChangeListener(this);
+        //launch a thread to update seekBar progress each second
+        new Thread(new Runnable() {
+            private int posicion;
+            boolean primera = true;
+            @Override
+            public void run() {
+                while(primera || renderer.getMediaPlayer()!=null){
+                    while (renderer.getMediaPlayer()==null){}
+                    while (!renderer.getMediaPlayer().isPlaying()){}
+                    primera=false;
+                    try{
+                        Thread.sleep(1000);
+//                    wait(1000);
+                        posicion = renderer.getMediaPlayer().getCurrentPosition();
+                    }catch(InterruptedException ex){
+                        return;
+                    }
+//                    Log.e("SEEKBAR","posicion "+posicion);
+                    seekBar.setMax(renderer.videoLength);
+//                    seekBar.setProgress(posicion);
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            seekBar.setProgress(posicion);
+                        }
+                    });
+                }
+//                Log.e("SEEKBAR","fin");
+            }
+        }).start();
+    }
+
+    protected String getAsTime(int t) {
+        return String.format("%02d:%02d",
+                TimeUnit.MILLISECONDS.toSeconds(t) / 60,
+                TimeUnit.MILLISECONDS.toSeconds(t) - TimeUnit.MILLISECONDS.toSeconds(t) / 60 * 60);
     }
 
     @Override
@@ -112,5 +177,30 @@ public class MainActivity extends Activity{
     protected void onResume() {
         super.onResume();
         surface.onResume();
+    }
+
+    /********************************************************************************/
+    /*                             SeekBarListener methods                          */
+    /********************************************************************************/
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        Log.e("SEEKBAR", "progress " + progress);
+        if (fromUser) {
+//            int posicion = progress * (renderer.videoLength/100);
+            renderer.getMediaPlayer().seekTo(progress);
+            seekBar.setProgress(progress);
+        }
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+        // TODO Auto-generated method stub
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+        // TODO Auto-generated method stub
+
     }
 }

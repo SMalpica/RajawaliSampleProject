@@ -33,12 +33,13 @@ import java.io.IOException;
 //TODO: ajustar size iconos playerControl. Cardboard demasiado grande, play small.
 //TODO: funcionalidad del backButton.
 //TODO: cambiar apariencia del seekBar. El default es feo con ganas.
-//TODO: actualizar seekBar cada segundo.
+//notTODO: actualizar seekBar cada segundo. Hecho
 //TODO: modo giroscopo.
 //TODO: modo cardboard.
 //TODO: linkear con app principal.
 //TODO: add animaciones o efectos en los elementos con los que el usuario puede interactuar.
 //TODO: hacer que el control del video se desvanezca con inactividad / desaparezca con click.
+//TODO: arreglar problema al bloquar y desbloquear la pantalla sin parar de reproducir.
 
 /**
  * Author: Sandra Malpica Mallo

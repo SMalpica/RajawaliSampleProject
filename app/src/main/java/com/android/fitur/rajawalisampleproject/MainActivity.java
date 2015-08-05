@@ -184,7 +184,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     /********************************************************************************/
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        Log.e("SEEKBAR", "progress " + progress);
+//        Log.e("SEEKBAR", "progress " + progress);
         if (fromUser) {
 //            int posicion = progress * (renderer.videoLength/100);
             renderer.getMediaPlayer().seekTo(progress);
@@ -193,14 +193,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     }
 
     @Override
-    public void onStartTrackingTouch(SeekBar seekBar) {
-        // TODO Auto-generated method stub
-
-    }
+    public void onStartTrackingTouch(SeekBar seekBar) {}
 
     @Override
-    public void onStopTrackingTouch(SeekBar seekBar) {
-        // TODO Auto-generated method stub
-
-    }
+    public void onStopTrackingTouch(SeekBar seekBar) {}
 }

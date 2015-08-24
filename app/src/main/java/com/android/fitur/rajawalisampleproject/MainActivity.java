@@ -2,6 +2,8 @@ package com.android.fitur.rajawalisampleproject;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.pm.ActivityInfo;
+import android.content.pm.PackageManager;
 import android.media.Image;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,6 +13,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
@@ -32,16 +35,22 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     RajawaliSurfaceView surface;    //surface
     public static View principal;   //surface
     private int modo=0;
+    private boolean tieneGiro = false;
+//    private boolean tieneAccel = false;
 
     /*method called when the activity is created*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-
+//        setContentView(R.layout.activity_main);
+        //full-screen
+        getWindow().setFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        //horizontal orientation
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         //creates the surface and sets the frameRate
         surface = new RajawaliSurfaceView(this);
-        surface.setFrameRate(60.0);
+        surface.setFrameRate(30.0);
+        surface.setKeepScreenOn(true);
         principal = surface;
         // Add mSurface to your root view
         addContentView(surface, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT));
@@ -81,17 +90,23 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         modeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                MainActivity.this.modo = (MainActivity.this.modo+1)%3;
-
+                //check if the device has accelerometer and gyroscope
+                if(tieneGiro){
+                    MainActivity.this.modo = (MainActivity.this.modo+1)%3;
+                }
                 switch (MainActivity.this.modo){
                     case 0:         //TOUCH MODE
                         modeButton.setImageLevel(0);
+                        renderer.toTouchMode();
                         break;
                     case 1:         //GYROSCOPE MODE
                         modeButton.setImageLevel(1);
+                        renderer.toGyroMode();
+                        Log.e("GYRO","de activity a renderer");
                         break;
                     case 2:         //CARDBOARD MODE
                         modeButton.setImageLevel(2);
+                        renderer.toCardboardMode();
                         break;
                 }
             }
@@ -137,6 +152,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 //                Log.e("SEEKBAR","fin");
             }
         }).start();
+
+        PackageManager pm = getPackageManager();
+        tieneGiro = pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_GYROSCOPE);
+//        tieneAccel = pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_ACCELEROMETER);
     }
 
     protected String getAsTime(int t) {

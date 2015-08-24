@@ -54,6 +54,7 @@ public class NuevaCamara extends Camera {
     private double yAnterior;
 
 
+
     /******************************/
 //    private float mPreviousX;
 //    private float mPreviousY;
@@ -83,6 +84,7 @@ public class NuevaCamara extends Camera {
         Log.e("CAMARA","inicializada");
         gradosxpixelX = gbarridoX/mLastWidth;
         gradosxpixelY = gbarridoY/mLastHeight;
+
     }
 
     private void initialize() {
@@ -139,23 +141,29 @@ public class NuevaCamara extends Camera {
 
     private void startRotation(final float x, final float y)
     {
-        mapToScreen(x, y, mPrevScreenCoord);
-        mCurrScreenCoord.setAll(mPrevScreenCoord.getX(), mPrevScreenCoord.getY());
 
-        mIsRotating = true;
-        this.xAnterior=x;
-        this.yAnterior=y;
+            mapToScreen(x, y, mPrevScreenCoord);
+            mCurrScreenCoord.setAll(mPrevScreenCoord.getX(), mPrevScreenCoord.getY());
+
+            mIsRotating = true;
+            this.xAnterior=x;
+            this.yAnterior=y;
+
     }
 
     private void updateRotation(final float x, final float y)
     {
-        mapToScreen(x, y, mCurrScreenCoord);
+
+            mapToScreen(x, y, mCurrScreenCoord);
 //        Log.e("orig", "x " + x + " y " + y);
 //        Log.e("TO_SCREEN", "x "+mCurrScreenCoord.getX()+" y "+mCurrScreenCoord.getY());
 //        Log.e("UPD_ROT_COORD","x "+x+" y "+y);
 //        applyRotation();
-        applyRotation(x,y);
+            applyRotation(x, y);
+
     }
+
+
 
     private void applyRotation(float x, float y){
         this.gradosxpixelX = gbarridoX/mLastWidth;
@@ -173,6 +181,7 @@ public class NuevaCamara extends Camera {
             normalizedQuaternion(q);
             this.mEmpty.setOrientation(q);
         }
+//        mStartOrientation.multiply(mCurrentOrientation);
     }
 
     private double aRadianes(double grados){

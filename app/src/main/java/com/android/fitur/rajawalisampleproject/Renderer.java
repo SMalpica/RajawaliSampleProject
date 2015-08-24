@@ -3,6 +3,7 @@ package com.android.fitur.rajawalisampleproject;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
+import android.opengl.Matrix;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.ImageButton;
@@ -39,7 +40,8 @@ import java.io.IOException;
 //TODO: linkear con app principal.
 //TODO: add animaciones o efectos en los elementos con los que el usuario puede interactuar.
 //TODO: hacer que el control del video se desvanezca con inactividad / desaparezca con click.
-//TODO: arreglar problema al bloquar y desbloquear la pantalla sin parar de reproducir.
+//TODO: arreglar problema al bloquar y desbloquear la pantalla sin parar de reproducir. Pasa en tablet, en movil no.
+//TODO: que no rote la esfera si deslizas sobre la barra de controles.
 
 /**
  * Author: Sandra Malpica Mallo
@@ -54,12 +56,18 @@ public class Renderer extends RajawaliRenderer {
     private MediaPlayer mMediaPlayer;   //mediaPLayer that holds the video
     StreamingTexture video;         //video texture to project on the sphere
     public int videoLength;         //video length in ms
+    private final int touchMode=0;
+    private final int gyroMode=1;
+    private final int cardboardMode=2;
+    private int mode;
+    private CamaraActualizada arcballCamera;
 
     /**Renderer constructor, initializes its main values*/
     public Renderer(Context context){
         super(context);
         this.context = context;
         setFrameRate(60);
+        mode=touchMode;
     }
 
     public void onTouchEvent(MotionEvent event){
@@ -110,7 +118,7 @@ public class Renderer extends RajawaliRenderer {
 
         //create the arcball camera and target the sphere
 //        mArcballCamera arcballCamera = new mArcballCamera(context,MainActivity.principal,earthSphere);
-        CamaraActualizada arcballCamera = new CamaraActualizada(context,MainActivity.principal,earthSphere);
+        arcballCamera = new CamaraActualizada(context,MainActivity.principal,earthSphere);
 //        Cam2d arcballCamera = new Cam2d(context, MainActivity.principal,earthSphere);
 //        NuevaCamara arcballCamera = new NuevaCamara(context,MainActivity.principal,earthSphere);
         Log.e("CAMARA", "camara creada");
@@ -134,6 +142,9 @@ public class Renderer extends RajawaliRenderer {
         }
 
         videoLength=mMediaPlayer.getDuration();
+
+//        arcballCamera.setProjectionMatrix(arcballCamera.getFieldOfView(),getViewportWidth(),getViewportHeight());
+
     }
 
     /*update the video texture on rendering*/
@@ -153,5 +164,27 @@ public class Renderer extends RajawaliRenderer {
 
     public MediaPlayer getMediaPlayer(){
         return this.mMediaPlayer;
+    }
+
+    public void toTouchMode(){
+        if(mode!=touchMode){
+            mode=touchMode;
+            arcballCamera.switchMode(mode);
+        }
+    }
+
+    public void toGyroMode(){
+        if(mode!=gyroMode){
+            mode=gyroMode;
+            arcballCamera.switchMode(mode);
+            Log.e("GYRO","de renderer a camara");
+        }
+    }
+
+    public void toCardboardMode(){
+        if(mode!=cardboardMode){
+            mode=cardboardMode;
+//            getCurrentCamera().switchMode(mode);
+        }
     }
 }

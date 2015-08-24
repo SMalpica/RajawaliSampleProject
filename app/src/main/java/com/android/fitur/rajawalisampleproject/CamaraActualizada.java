@@ -2,6 +2,10 @@ package com.android.fitur.rajawalisampleproject;
 
 import android.app.Activity;
 import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.GestureDetector;
@@ -22,7 +26,7 @@ import org.rajawali3d.math.vector.Vector3;
 /**
  * Created by Fitur on 27/07/2015.
  */
-public class CamaraActualizada extends ArcballCamera{
+public class CamaraActualizada extends ArcballCamera implements SensorEventListener{
 
     private Context mContext;
     private ScaleGestureDetector mScaleDetector;
@@ -51,6 +55,11 @@ public class CamaraActualizada extends ArcballCamera{
     private double giradoenY = 0;
     private double xAnterior;
     private double yAnterior;
+    private double yaw=0,pitch=0,roll=0;
+    private final int touchMode=0;
+    private final int gyroMode=1;
+    private int mode;
+    private SensorManager sm;
 
 
     /******************************/
@@ -78,9 +87,11 @@ public class CamaraActualizada extends ArcballCamera{
         mView = view;
         initialize();
         addListeners();
-        Log.e("CAMARA","inicializada");
+        Log.e("CAMARA", "inicializada");
         gradosxpixelX = gbarridoX/mLastWidth;
         gradosxpixelY = gbarridoY/mLastHeight;
+        mode=touchMode;
+        sm=(SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
     }
 
     private void initialize() {
@@ -137,22 +148,43 @@ public class CamaraActualizada extends ArcballCamera{
 
     private void startRotation(final float x, final float y)
     {
-        mapToScreen(x, y, mPrevScreenCoord);
-        mCurrScreenCoord.setAll(mPrevScreenCoord.getX(), mPrevScreenCoord.getY());
+        if(mode==touchMode){
+            mapToScreen(x, y, mPrevScreenCoord);
+            mCurrScreenCoord.setAll(mPrevScreenCoord.getX(), mPrevScreenCoord.getY());
 
-        mIsRotating = true;
-        this.xAnterior=x;
-        this.yAnterior=y;
+            mIsRotating = true;
+            this.xAnterior=x;
+            this.yAnterior=y;
+        }
     }
 
     private void updateRotation(final float x, final float y)
     {
-        mapToScreen(x, y, mCurrScreenCoord);
-//        Log.e("orig", "x " + x + " y " + y);
-//        Log.e("TO_SCREEN", "x "+mCurrScreenCoord.getX()+" y "+mCurrScreenCoord.getY());
-//        Log.e("UPD_ROT_COORD","x "+x+" y "+y);
-//        applyRotation();
-        applyRotation(x,y);
+        if(mode==touchMode){
+            mapToScreen(x, y, mCurrScreenCoord);
+    //        Log.e("orig", "x " + x + " y " + y);
+    //        Log.e("TO_SCREEN", "x "+mCurrScreenCoord.getX()+" y "+mCurrScreenCoord.getY());
+    //        Log.e("UPD_ROT_COORD","x "+x+" y "+y);
+    //        applyRotation();
+            applyRotation(x,y);
+        }else{
+            applyRotationG();
+        }
+    }
+
+    private void applyRotationG(){
+//        Log.e("GYRO","yaw "+yaw+" pitch "+pitch+" roll "+roll);
+        if(this.mIsRotating){
+            this.mCurrentOrientation.fromEuler(yaw, pitch, roll);
+//            Log.e("NUEVO","x w current pre normalize roll"+mCurrentOrientation.getRoll());
+            this.mCurrentOrientation.normalize();
+//            Log.e("NUEVO","x q current post normalize roll"+mCurrentOrientation.getRoll());
+            Quaternion q = new Quaternion(this.mStartOrientation);
+            q.multiply(this.mCurrentOrientation);
+//            normalizedQuaternion(q);
+            this.mEmpty.setOrientation(q);
+//            Log.e("GYRO","m esta rotando");
+        }
     }
 
     private void applyRotation(float x, float y){
@@ -315,25 +347,26 @@ public class CamaraActualizada extends ArcballCamera{
 
     @Override
     public Matrix4 getViewMatrix() {
-        Matrix4 m = super.getViewMatrix();
-        if(this.mTarget != null) {
-            this.mScratchMatrix.identity();
-            this.mScratchMatrix.translate(this.mTarget.getPosition());
-            m.multiply(this.mScratchMatrix);
-        }
+            Matrix4 m = super.getViewMatrix();
+            if(this.mTarget != null) {
+                this.mScratchMatrix.identity();
+                this.mScratchMatrix.translate(this.mTarget.getPosition());
+                m.multiply(this.mScratchMatrix);
+            }
 
-        this.mScratchMatrix.identity();
-        this.mScratchMatrix.rotate(this.mEmpty.getOrientation());
-        m.multiply(this.mScratchMatrix);
-        if(this.mTarget != null) {
-            this.mScratchVector.setAll(this.mTarget.getPosition());
-            this.mScratchVector.inverse();
             this.mScratchMatrix.identity();
-            this.mScratchMatrix.translate(this.mScratchVector);
+            this.mScratchMatrix.rotate(this.mEmpty.getOrientation());
             m.multiply(this.mScratchMatrix);
-        }
+            if(this.mTarget != null) {
+                this.mScratchVector.setAll(this.mTarget.getPosition());
+                this.mScratchVector.inverse();
+                this.mScratchMatrix.identity();
+                this.mScratchMatrix.translate(this.mScratchVector);
+                m.multiply(this.mScratchMatrix);
+            }
 
-        return m;
+            return m;
+
 ////        Log.e("CAMARA","en getviewmatrix");
 //        Matrix4 m = super.getModelMatrix();
 //
@@ -427,7 +460,7 @@ public class CamaraActualizada extends ArcballCamera{
                             mDetector.onTouchEvent(event);
 
                             if (event.getAction() == MotionEvent.ACTION_UP) {
-                                if (mIsRotating) {
+                                if (mIsRotating && mode==touchMode) {
                                     endRotation();
                                     mIsRotating = false;
                                 }
@@ -511,6 +544,86 @@ public class CamaraActualizada extends ArcballCamera{
         public void onScaleEnd (ScaleGestureDetector detector) {
             mIsRotating = false;
             mIsScaling = false;
+        }
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent event){
+//        if(event.accuracy!=SensorManager.SENSOR_STATUS_UNRELIABLE){
+//            roll = fromRadiantoDegree(event.values[2]);
+//            pitch = fromRadiantoDegree(event.values[1]);
+//            yaw = fromRadiantoDegree(event.values[0]);
+//            //applyRotationG();
+//            Log.e("GYRO", "onSensorChanged roll " + roll + " pitch " + pitch + " yaw " + yaw);
+//        }
+        // It is good practice to check that we received the proper sensor event
+        if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)
+        {
+            float[] mRotationMatrix = new float[16];
+            float[] mAuxMatrix = new float[16];
+            float[] orientationVals = new float[3];
+            // Convert the rotation-vector to a 4x4 matrix.
+            SensorManager.getRotationMatrixFromVector(mRotationMatrix,
+                    event.values);
+            SensorManager
+                    .remapCoordinateSystem(mRotationMatrix,
+                            SensorManager.AXIS_X, SensorManager.AXIS_Z,
+                            mAuxMatrix);
+            SensorManager.getOrientation(mAuxMatrix, orientationVals);
+
+            // Optionally convert the result from radians to degrees
+            orientationVals[0] = (float) Math.toDegrees(orientationVals[0]);
+            orientationVals[1] = (float) Math.toDegrees(orientationVals[1]);
+            orientationVals[2] = (float) Math.toDegrees(orientationVals[2]);
+
+           /* SensorManager.getRotationMatrixFromVector(mAuxMatrix, event.values);
+            SensorManager.remapCoordinateSystem(mAuxMatrix,
+                    SensorManager.AXIS_X, SensorManager.AXIS_Z,
+                    mRotationMatrix);
+            SensorManager.getOrientation(mRotationMatrix, orientationVals);
+
+            // Optionally convert the result from radians to degrees
+            orientationVals[0] = (float) Math.toDegrees(orientationVals[0]);
+            orientationVals[1] = (float) Math.toDegrees(orientationVals[1]);
+            orientationVals[2] = (float) Math.toDegrees(orientationVals[2]);*/
+
+//            System.out.println(" Yaw: " + orientationVals[0] + " Pitch: "
+//                    + orientationVals[1] + " Roll (not used): "
+//                    + orientationVals[2]);
+
+            yaw=orientationVals[2];
+//            yaw=0;
+//            pitch=0;
+            pitch = orientationVals[1];
+            roll = orientationVals[0];
+            applyRotationG();
+
+        }
+    }
+
+    private double fromRadiantoDegree(double radian){
+        //return (360*radian)/2.0*Math.PI*100;
+        return radian*100;
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor arg0, int arg1)
+    {
+        //Do nothing.
+    }
+
+    public void switchMode(int m){
+        this.mode=m;
+        Log.e("GYRO","mode switched to "+mode);
+        if(mode==gyroMode){
+            Log.e("GYRO","gyro registered");
+            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),SensorManager.SENSOR_DELAY_FASTEST);
+            mIsRotating=true;
+            mIsScaling=false;
+        }else{
+            sm.unregisterListener(this,sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR));
+            Log.e("GYRO", "gyro unregistered");
+            mIsRotating=false;
         }
     }
 
@@ -683,4 +796,5 @@ public boolean onTouchEvent(MotionEvent event)
     }
     _modelViewProjectionMatrix = GLKMatrix4Multiply(projectionMatrix, modelViewMatrix);
         */
+
 }

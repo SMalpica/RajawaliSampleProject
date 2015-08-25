@@ -24,24 +24,24 @@ import java.io.IOException;
 
 //notTODO: cambiar esfera predeterminada por esfera bien hecha
 //NotTODO: ArcBallCamera para eventos de tacto y etcétera (HECHO)
-//TODO: regular touch de arcballCamera(VIP) y extender para eventos de giroscopio (add button)
+//notTODO: regular touch de arcballCamera(VIP) y (BOTON AÑADIDO)extender para eventos de giroscopio (add button)
 //NotTODO: crear una instancia del android video player normal y ponerla como imagen
-//TODO: Anyadir controles del reproductor
+//notTODO: Anyadir controles del reproductor
 //notTODO: comprobar funcionamiento video. EL vídeo va bien.
 //TODO: arreglar inclinacion del video
-//TODO: uses-permission android:name="android.permission.WAKE_LOCK" evitar q pantalla se bloquee
-//TODO: cambiar de proyeccion fisheye a rectilinea
-//TODO: ajustar size iconos playerControl. Cardboard demasiado grande, play small.
-//TODO: funcionalidad del backButton.
-//TODO: cambiar apariencia del seekBar. El default es feo con ganas.
+//notTODO: uses-permission android:name="android.permission.WAKE_LOCK" evitar q pantalla se bloquee
+//TODO: cambiar de proyeccion fisheye a rectilinea. Aproximacion conseguida
+//notTODO: ajustar size iconos playerControl. Cardboard demasiado grande, play small.
+//notTODO: cambiar apariencia del seekBar. El default es feo con ganas.
 //notTODO: actualizar seekBar cada segundo. Hecho
-//TODO: modo giroscopo.
+//TODO: modo giroscopo. No se mueve como deberia. Tal vez porque no estamos en la orientacion default en movil. Arreglar.
 //TODO: modo cardboard.
-//TODO: linkear con app principal.
+//TODO: linkear con app principal. funcionalidad del backButton.
 //TODO: add animaciones o efectos en los elementos con los que el usuario puede interactuar.
 //TODO: hacer que el control del video se desvanezca con inactividad / desaparezca con click.
 //TODO: arreglar problema al bloquar y desbloquear la pantalla sin parar de reproducir. Pasa en tablet, en movil no.
 //TODO: que no rote la esfera si deslizas sobre la barra de controles.
+//TODO: poner en los textview del control del video el tiempo total y el actual.
 
 /**
  * Author: Sandra Malpica Mallo
@@ -90,6 +90,12 @@ public class Renderer extends RajawaliRenderer {
         mMediaPlayer.setLooping(true);  //enable video looping
         video = new StreamingTexture("pyrex",mMediaPlayer); //create video texture
         mMediaPlayer.prepareAsync();    //prepare the player (asynchronous)
+        mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+            @Override
+            public void onPrepared(MediaPlayer mp) {
+                mp.start();
+            }
+        });
         //add textture to a new material
         Material material = new Material ();
         material.setColorInfluence(0f);
@@ -106,12 +112,12 @@ public class Renderer extends RajawaliRenderer {
         Log.e("ESFERA", "posicion " + earthSphere.getPosition());
         Log.e("ESFERA", "camara " + getCurrentCamera().getPosition());
         //invert the sphere (to display the video on the inside
-        earthSphere.setScale(2.0);
-        earthSphere.setScaleX(1);
-        earthSphere.setScaleY(1);
-        earthSphere.setScaleZ(-1);
+//        earthSphere.setScale();
+        earthSphere.setScaleX(1.15);
+        earthSphere.setScaleY(1.15);
+        earthSphere.setScaleZ(-1.15);
 
-        getCurrentCamera().setPosition(0, 0, 1);
+//        getCurrentCamera().setPosition(0, 0, 1);
         Log.e("ESFERA", "camara mirando a " + getCurrentCamera().getLookAt());
         Log.e("ESFERA", "camara en cero? " + getCurrentCamera().getPosition());
         Log.e("ESFERA", "camara mirando a " + getCurrentCamera().getLookAt());
@@ -127,10 +133,10 @@ public class Renderer extends RajawaliRenderer {
         Log.e("CAMARA", "camara movida");
         //switch cameras
         getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(), arcballCamera);
-        arcballCamera.setPosition(0, 0, 1);
+        arcballCamera.setPosition(0, 0, 0.5);
         Log.e("CAMARA", "switch camara");
         //start the player
-        mMediaPlayer.start();
+//        mMediaPlayer.start();
         Log.e("CAMARA", "player start");
 
 //        Matrix4 projection = new Matrix4();

@@ -8,9 +8,11 @@ import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
+import android.view.Surface;
 import android.view.View;
 import android.view.WindowManager;
 
@@ -56,10 +58,14 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
     private double xAnterior;
     private double yAnterior;
     private double yaw=0,pitch=0,roll=0;
+    private double yawo=0, pitcho=0, rollo=0;
     private final int touchMode=0;
     private final int gyroMode=1;
     private int mode;
+    private int axisx,axisy,axisz;
     private SensorManager sm;
+    private boolean medicionInicial=true;
+
 
 
     /******************************/
@@ -567,10 +573,10 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
                     event.values);
             SensorManager
                     .remapCoordinateSystem(mRotationMatrix,
-                            SensorManager.AXIS_X, SensorManager.AXIS_Z,
+                           axisx, axisy,
                             mAuxMatrix);
             SensorManager.getOrientation(mAuxMatrix, orientationVals);
-
+//            SensorManager.getOrientation(mRotationMatrix,orientationVals);
             // Optionally convert the result from radians to degrees
             orientationVals[0] = (float) Math.toDegrees(orientationVals[0]);
             orientationVals[1] = (float) Math.toDegrees(orientationVals[1]);
@@ -591,11 +597,23 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
 //                    + orientationVals[1] + " Roll (not used): "
 //                    + orientationVals[2]);
 
-            yaw=orientationVals[2];
-//            yaw=0;
+
+
+//            if(orientationVals[2]>160) orientationVals[2]=160;
+//            else if(orientationVals[2]<-160) orientationVals[2]=-160;
+            yaw=-orientationVals[1];
+//            if(orientationVals[1]>90) orientationVals[1]=90;
+//            else if(orientationVals[1]<-90) orientationVals[1]=-90;
+            pitch = -orientationVals[2];
+//            if(orientationVals[0]>160) orientationVals[0]=161;
+//            else if(orientationVals[0]<-160) orientationVals[0]=-162;
+            roll = -orientationVals[0];
+            WindowManager windowManager=(WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
+            int orientacion =windowManager.getDefaultDisplay().getRotation();
+            System.out.println("yaw "+yaw+" pitch "+pitch+" roll "+roll);
+//            yaw=180;
 //            pitch=0;
-            pitch = orientationVals[1];
-            roll = orientationVals[0];
+//            roll=0;
             applyRotationG();
 
         }
@@ -618,12 +636,31 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         if(mode==gyroMode){
             Log.e("GYRO","gyro registered");
             sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),SensorManager.SENSOR_DELAY_FASTEST);
+            //correccion del yaw, pitch y roll
+            if(medicionInicial){
+                medicionInicial=false;
+                WindowManager windowManager=(WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
+                int orientacion =windowManager.getDefaultDisplay().getRotation();
+                switch(orientacion){
+                    case Surface.ROTATION_0:
+                        break;
+                    case Surface.ROTATION_90:
+                        axisx=SensorManager.AXIS_MINUS_Y;
+                        axisy=SensorManager.AXIS_MINUS_X;
+                        break;
+                    case Surface.ROTATION_180:
+                        break;
+                    case Surface.ROTATION_270:
+                        break;
+                }
+            }
             mIsRotating=true;
             mIsScaling=false;
         }else{
-            sm.unregisterListener(this,sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR));
+            sm.unregisterListener(this, sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR));
             Log.e("GYRO", "gyro unregistered");
             mIsRotating=false;
+            medicionInicial=true;
         }
     }
 

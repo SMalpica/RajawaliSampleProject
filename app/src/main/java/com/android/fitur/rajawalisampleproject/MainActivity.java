@@ -132,13 +132,13 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     while (renderer.getMediaPlayer()==null){}
                     while (!renderer.getMediaPlayer().isPlaying()){}
                     primera=false;
-                    try{
-                        Thread.sleep(1000);
+//                    try{
+//                        Thread.sleep(2000);
 //                    wait(1000);
                         posicion = renderer.getMediaPlayer().getCurrentPosition();
-                    }catch(InterruptedException ex){
-                        return;
-                    }
+//                    }catch(InterruptedException ex){
+//                        return;
+//                    }
 //                    Log.e("SEEKBAR","posicion "+posicion);
                     seekBar.setMax(renderer.videoLength);
 //                    seekBar.setProgress(posicion);

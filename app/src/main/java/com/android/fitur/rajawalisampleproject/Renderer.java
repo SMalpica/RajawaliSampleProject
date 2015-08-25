@@ -30,7 +30,7 @@ import java.io.IOException;
 //notTODO: comprobar funcionamiento video. EL vídeo va bien.
 //TODO: arreglar inclinacion del video
 //notTODO: uses-permission android:name="android.permission.WAKE_LOCK" evitar q pantalla se bloquee
-//TODO: cambiar de proyeccion fisheye a rectilinea. Aproximacion conseguida
+//notTODO: cambiar de proyeccion fisheye a rectilinea. Aproximacion conseguida
 //notTODO: ajustar size iconos playerControl. Cardboard demasiado grande, play small.
 //notTODO: cambiar apariencia del seekBar. El default es feo con ganas.
 //notTODO: actualizar seekBar cada segundo. Hecho

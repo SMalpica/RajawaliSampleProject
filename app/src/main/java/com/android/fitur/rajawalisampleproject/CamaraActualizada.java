@@ -181,14 +181,16 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
     private void applyRotationG(){
 //        Log.e("GYRO","yaw "+yaw+" pitch "+pitch+" roll "+roll);
         if(this.mIsRotating){
-            this.mCurrentOrientation.fromEuler(yaw, pitch, roll);
+//            this.mCurrentOrientation.fromEuler(yaw, pitch, roll);
+            this.mCurrentOrientation.fromEuler(-yaw, -pitch, 0);
 //            Log.e("NUEVO","x w current pre normalize roll"+mCurrentOrientation.getRoll());
             this.mCurrentOrientation.normalize();
+            this.mEmpty.setOrientation(mCurrentOrientation);
 //            Log.e("NUEVO","x q current post normalize roll"+mCurrentOrientation.getRoll());
-            Quaternion q = new Quaternion(this.mStartOrientation);
-            q.multiply(this.mCurrentOrientation);
+//            Quaternion q = new Quaternion(this.mStartOrientation);
+//            q.multiply(this.mCurrentOrientation);
 //            normalizedQuaternion(q);
-            this.mEmpty.setOrientation(q);
+//            this.mEmpty.setOrientation(mCurrentOrientation);
 //            Log.e("GYRO","m esta rotando");
         }
     }
@@ -563,7 +565,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
 //            Log.e("GYRO", "onSensorChanged roll " + roll + " pitch " + pitch + " yaw " + yaw);
 //        }
         // It is good practice to check that we received the proper sensor event
-        if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)
+        if (event.sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR)
         {
             float[] mRotationMatrix = new float[16];
             float[] mAuxMatrix = new float[16];
@@ -573,7 +575,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
                     event.values);
             SensorManager
                     .remapCoordinateSystem(mRotationMatrix,
-                           axisx, axisy,
+                           SensorManager.AXIS_X, SensorManager.AXIS_Z,
                             mAuxMatrix);
             SensorManager.getOrientation(mAuxMatrix, orientationVals);
 //            SensorManager.getOrientation(mRotationMatrix,orientationVals);
@@ -601,14 +603,15 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
 
 //            if(orientationVals[2]>160) orientationVals[2]=160;
 //            else if(orientationVals[2]<-160) orientationVals[2]=-160;
-            yaw=-orientationVals[1];
+            yaw=orientationVals[0];
 //            if(orientationVals[1]>90) orientationVals[1]=90;
 //            else if(orientationVals[1]<-90) orientationVals[1]=-90;
-            pitch = -orientationVals[2];
+            pitch = orientationVals[1];
 //            if(orientationVals[0]>160) orientationVals[0]=161;
 //            else if(orientationVals[0]<-160) orientationVals[0]=-162;
-            roll = -orientationVals[0];
+            roll = orientationVals[2];
             WindowManager windowManager=(WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
+
             int orientacion =windowManager.getDefaultDisplay().getRotation();
             System.out.println("yaw "+yaw+" pitch "+pitch+" roll "+roll);
 //            yaw=180;
@@ -632,10 +635,11 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
 
     public void switchMode(int m){
         this.mode=m;
-        Log.e("GYRO","mode switched to "+mode);
-        if(mode==gyroMode){
-            Log.e("GYRO","gyro registered");
-            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR),SensorManager.SENSOR_DELAY_FASTEST);
+        Log.e("GYRO","mode switched to " + mode);
+        if (mode == gyroMode){
+            Log.e("GYRO", "gyro registered");
+            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_GAME);
+//            this.getTarget().rotate(Vector3.Axis.Z,90);
             //correccion del yaw, pitch y roll
             if(medicionInicial){
                 medicionInicial=false;

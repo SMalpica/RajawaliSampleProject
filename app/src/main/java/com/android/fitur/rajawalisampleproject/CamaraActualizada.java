@@ -596,7 +596,8 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
 //            Log.e("GYRO", "onSensorChanged roll " + roll + " pitch " + pitch + " yaw " + yaw);
 //        }
         // It is good practice to check that we received the proper sensor event
-        if (event.sensor.getType() == Sensor.TYPE_GAME_ROTATION_VECTOR)
+        System.out.println("onSensorChanged");
+        if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)
         {
             float[] mRotationMatrix = new float[16];
             float[] mAuxMatrix = new float[16];
@@ -626,9 +627,9 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
             orientationVals[1] = (float) Math.toDegrees(orientationVals[1]);
             orientationVals[2] = (float) Math.toDegrees(orientationVals[2]);*/
 
-//            System.out.println(" Yaw: " + orientationVals[0] + " Pitch: "
-//                    + orientationVals[1] + " Roll (not used): "
-//                    + orientationVals[2]);
+            System.out.println(" Yaw: " + orientationVals[0] + " Pitch: "
+                    + orientationVals[1] + " Roll (not used): "
+                    + orientationVals[2]);
 
 
 
@@ -669,7 +670,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         Log.e("GYRO","mode switched to " + mode);
         if (mode == gyroMode){
             Log.e("GYRO", "gyro registered");
-            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_GAME_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_GAME);
+            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST);
 //            this.getTarget().rotate(Vector3.Axis.Z,90);
             //correccion del yaw, pitch y roll
             if(medicionInicial){

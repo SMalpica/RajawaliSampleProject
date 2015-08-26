@@ -180,7 +180,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         control=view;
         PackageManager pm = getPackageManager();
         tieneGiro = pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_GYROSCOPE);
-//        tieneAccel = pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_ACCELEROMETER);
+        Log.e("GYRO","tiene acelerometro "+pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_ACCELEROMETER));
+        Log.e("GYRO","tiene sensor rotacion "+pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_COMPASS) );
+        Log.e("GYRO", "tiene giroscopo "+tieneGiro);
+        Log.e("PRUEBA","estoy al final del onCreate del activity");
     }
 
     @Override
@@ -227,12 +230,23 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     protected void onPause() {
         super.onPause();
         surface.onPause();
+        renderer.onPause();
+        if(renderer!=null && renderer.getMediaPlayer()!=null){
+            renderer.getMediaPlayer().pause();
+        }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         surface.onResume();
+        renderer.onResume();
+        if(renderer!=null && renderer.getMediaPlayer()!=null){
+            renderer.getMediaPlayer().start();
+        }
+        if(view.getVisibility()!=View.VISIBLE){
+            view.setVisibility(View.VISIBLE);
+        }
     }
 
     /********************************************************************************/

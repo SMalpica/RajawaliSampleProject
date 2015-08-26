@@ -6,6 +6,7 @@ import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.media.Image;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -29,13 +30,16 @@ import java.util.concurrent.TimeUnit;
  * Class: MainActivity.java
  * Comments: main app class, holds main activity. Creates a rajawali surface and sets things up.
  */
-public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener{
+public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeListener,View.OnClickListener{
 
     Renderer renderer;  //openGL renderer
     RajawaliSurfaceView surface;    //surface
     public static View principal;   //surface
+    public static View control;     //view
     private int modo=0;
     private boolean tieneGiro = false;
+    public static CountDownTimer timer;
+    public LinearLayout view;       //view
 //    private boolean tieneAccel = false;
 
     /*method called when the activity is created*/
@@ -54,7 +58,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         principal = surface;
         // Add mSurface to your root view
         addContentView(surface, new ActionBar.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT));
-
         renderer = new Renderer(this);
         surface.setSurfaceRenderer(renderer);
 
@@ -64,9 +67,31 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         LayoutInflater layoutInflater = LayoutInflater.from(getApplicationContext());
         layoutInflater.inflate(R.layout.player_control, null);
         ViewGroup viewGroup = (ViewGroup)getWindow().getDecorView().findViewById(android.R.id.content);
-        LinearLayout view = (LinearLayout)layoutInflater.inflate(R.layout.player_control, null);
+        view = (LinearLayout)layoutInflater.inflate(R.layout.player_control, null);
         view.setVerticalGravity(Gravity.BOTTOM);
         viewGroup.addView(view);
+        //set the controls invisible when 3s pass and the user doesnt touch them.
+        timer=new CountDownTimer(7000,7000){
+            public void onFinish(){
+              MainActivity.this.view.setVisibility(View.INVISIBLE);
+            }
+            public void onTick(long l){}
+        };
+        timer.start();
+        //also make the view reappear when the screen is touched
+//        surface.setOnClickListener(new View.OnClickListener() {
+//        @Override
+//        public void onClick(View v) {
+//            System.out.println("onclick triggered");
+//            timer.cancel();
+//            if (MainActivity.this.view.getVisibility() == View.INVISIBLE) {
+//                MainActivity.this.view.setVisibility(View.VISIBLE);
+//                timer.start();
+//            } else {
+//                MainActivity.this.view.setVisibility(View.INVISIBLE);
+//            }
+//        }
+//        });
 
         final ImageButton playButton = (ImageButton) view.findViewById(R.id.playbutton);
         ImageButton backButton = (ImageButton) view.findViewById(R.id.backbutton);
@@ -122,7 +147,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 
         /*seekBar tutorial from http://sapandiwakar.in/tutorial-how-to-manually-create-android-media-player-controls/ */
         seekBar.setOnSeekBarChangeListener(this);
-        //launch a thread to update seekBar progress each second
+        //launch a thread to update seekBar progress (---each second----)
         new Thread(new Runnable() {
             private int posicion;
             boolean primera = true;
@@ -133,7 +158,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                     while (!renderer.getMediaPlayer().isPlaying()){}
                     primera=false;
 //                    try{
-//                        Thread.sleep(2000);
+//                        Thread.sleep(1000);
 //                    wait(1000);
                         posicion = renderer.getMediaPlayer().getCurrentPosition();
 //                    }catch(InterruptedException ex){
@@ -152,10 +177,22 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
 //                Log.e("SEEKBAR","fin");
             }
         }).start();
-
+        control=view;
         PackageManager pm = getPackageManager();
         tieneGiro = pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_GYROSCOPE);
 //        tieneAccel = pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_ACCELEROMETER);
+    }
+
+    @Override
+    public void onClick(View v) {
+        System.out.println("onclick triggered");
+        timer.cancel();
+        if (MainActivity.this.view.getVisibility() == View.INVISIBLE) {
+            MainActivity.this.view.setVisibility(View.VISIBLE);
+            timer.start();
+        } else {
+            MainActivity.this.view.setVisibility(View.INVISIBLE);
+        }
     }
 
     protected String getAsTime(int t) {

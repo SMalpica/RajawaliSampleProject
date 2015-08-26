@@ -38,10 +38,11 @@ import java.io.IOException;
 //TODO: modo cardboard.
 //TODO: linkear con app principal. funcionalidad del backButton.
 //TODO: add animaciones o efectos en los elementos con los que el usuario puede interactuar.
-//TODO: hacer que el control del video se desvanezca con inactividad / desaparezca con click.
+//notTODO: hacer que el control del video se desvanezca con inactividad / desaparezca con click.
 //TODO: arreglar problema al bloquar y desbloquear la pantalla sin parar de reproducir. Pasa en tablet, en movil no.
 //TODO: que no rote la esfera si deslizas sobre la barra de controles.
 //TODO: poner en los textview del control del video el tiempo total y el actual.
+//TODO: seekbar deja de funcionar al bloquear y desbloquear el movil
 
 /**
  * Author: Sandra Malpica Mallo

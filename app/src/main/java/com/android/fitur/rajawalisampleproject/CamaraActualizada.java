@@ -59,12 +59,14 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
     private double yAnterior;
     private double yaw=0,pitch=0,roll=0;
     private double yawo=0, pitcho=0, rollo=0;
+//    private double yawAnterior=0;
     private final int touchMode=0;
     private final int gyroMode=1;
     private int mode;
     private int axisx,axisy,axisz;
     private SensorManager sm;
     private boolean medicionInicial=true;
+//    private boolean salto=true;
 
 
 
@@ -182,7 +184,27 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
 //        Log.e("GYRO","yaw "+yaw+" pitch "+pitch+" roll "+roll);
         if(this.mIsRotating){
 //            this.mCurrentOrientation.fromEuler(yaw, pitch, roll);
-            this.mCurrentOrientation.fromEuler(-yaw, -pitch, 0);
+
+//            if(yaw<-100) yaw=-90;//no funciona
+//            yaw+=180+90;
+//            double resta = yaw-yawAnterior;
+//            if(yaw<185 && yaw>180 && resta<0 && salto){
+//                System.out.println("yaw alto "+yaw);
+//                yaw=176;
+//                salto=false;
+//            }else if(yaw>180 && yaw<185 && resta>0 && salto){
+//                System.out.println("yaw bajo "+yaw);
+//                yaw=185;
+//                salto=false;
+//            }else if(yaw<178 || yaw > 187) salto=true;
+
+//            System.out.println("yaw "+yaw+" pitch "+pitch+" roll "+0.0);
+//            if(yaw>360){
+//                System.out.println("Limite superado "+yaw);
+//            }
+//            System.out.println("yaw "+yaw);
+            this.mCurrentOrientation.fromEuler(-yaw, -pitch, 0.0);
+//            yawAnterior=yaw;
 //            Log.e("NUEVO","x w current pre normalize roll"+mCurrentOrientation.getRoll());
             this.mCurrentOrientation.normalize();
             this.mEmpty.setOrientation(mCurrentOrientation);
@@ -471,6 +493,15 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
                                 if (mIsRotating && mode==touchMode) {
                                     endRotation();
                                     mIsRotating = false;
+                                }else{
+                                    System.out.println("triger up");
+                                    MainActivity.timer.cancel();
+                                    if (MainActivity.control.getVisibility() == View.INVISIBLE) {
+                                        MainActivity.control.setVisibility(View.VISIBLE);
+                                        MainActivity.timer.start();
+                                    } else {
+                                        MainActivity.control.setVisibility(View.INVISIBLE);
+                                    }
                                 }
                             }
                         }
@@ -613,7 +644,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
             WindowManager windowManager=(WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
 
             int orientacion =windowManager.getDefaultDisplay().getRotation();
-            System.out.println("yaw "+yaw+" pitch "+pitch+" roll "+roll);
+
 //            yaw=180;
 //            pitch=0;
 //            roll=0;

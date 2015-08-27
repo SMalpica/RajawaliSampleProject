@@ -3,21 +3,12 @@ package com.android.fitur.rajawalisampleproject;
 import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
-import android.opengl.Matrix;
 import android.os.PowerManager;
 import android.util.Log;
 import android.view.MotionEvent;
-import android.widget.ImageButton;
-import android.widget.MediaController;
-import android.widget.ToggleButton;
-
-import org.rajawali3d.Object3D;
-import org.rajawali3d.cameras.ArcballCamera;
-import org.rajawali3d.cameras.Camera;
 import org.rajawali3d.materials.Material;
 import org.rajawali3d.materials.textures.ATexture;
 import org.rajawali3d.materials.textures.StreamingTexture;
-import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.primitives.Sphere;
 import org.rajawali3d.renderer.RajawaliRenderer;
 
@@ -41,6 +32,7 @@ import java.io.IOException;
 //TODO: add animaciones o efectos en los elementos con los que el usuario puede interactuar.
 //notTODO: hacer que el control del video se desvanezca con inactividad / desaparezca con click.
 //notTODO: arreglar problema al bloquar y desbloquear la pantalla sin parar de reproducir. Pasa en tablet, en movil no.
+//TODO: comprobar correcto funcionamiento en tablet
 //TODO: que no rote la esfera si deslizas sobre la barra de controles.
 //notTODO: poner en los textview del control del video el tiempo total y el actual.
 //notTODO: seekbar deja de funcionar al bloquear y desbloquear el movil
@@ -58,18 +50,18 @@ public class Renderer extends RajawaliRenderer {
     private MediaPlayer mMediaPlayer;   //mediaPLayer that holds the video
     StreamingTexture video;         //video texture to project on the sphere
     public int pausedPosition;         //video length in ms
-    private final int touchMode=0;
-    private final int gyroMode=1;
-    private final int cardboardMode=2;
-    private int mode;
-    private CamaraActualizada arcballCamera;
+    private final int touchMode=0;  //touch mode. the sphere is rotated by touching the screen
+    private final int gyroMode=1;   //gyro mode. the sphere is rotated using the devices sensors
+    private final int cardboardMode=2;//cardboard mode.
+    private int mode;               //actual playback mode
+    private CamaraActualizada arcballCamera;    //arcballCamera that looks at the sphere
 
     /**Renderer constructor, initializes its main values*/
     public Renderer(Context context){
         super(context);
         this.context = context;
-        setFrameRate(60);
-        mode=touchMode;
+        setFrameRate(30);   //sets the renderer frame rate
+        mode=touchMode;     //initial mode: touch mode
     }
 
     public void onTouchEvent(MotionEvent event){
@@ -95,7 +87,7 @@ public class Renderer extends RajawaliRenderer {
         mMediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
             @Override
             public void onPrepared(MediaPlayer mp) {
-                mp.start();
+                mp.start(); //start the player only when it is prepared
             }
         });
         //add textture to a new material
@@ -113,45 +105,23 @@ public class Renderer extends RajawaliRenderer {
         getCurrentScene().addChild(earthSphere);
         Log.e("ESFERA", "posicion " + earthSphere.getPosition());
         Log.e("ESFERA", "camara " + getCurrentCamera().getPosition());
-        //invert the sphere (to display the video on the inside
-//        earthSphere.setScale();
+        //invert the sphere (to display the video on the inside of the sphere)
         earthSphere.setScaleX(1.15);
         earthSphere.setScaleY(1.15);
         earthSphere.setScaleZ(-1.15);
 
-//        getCurrentCamera().setPosition(0, 0, 1);
         Log.e("ESFERA", "camara mirando a " + getCurrentCamera().getLookAt());
         Log.e("ESFERA", "camara en cero? " + getCurrentCamera().getPosition());
         Log.e("ESFERA", "camara mirando a " + getCurrentCamera().getLookAt());
 
         //create the arcball camera and target the sphere
-//        mArcballCamera arcballCamera = new mArcballCamera(context,MainActivity.principal,earthSphere);
         arcballCamera = new CamaraActualizada(context,MainActivity.principal,earthSphere);
-//        Cam2d arcballCamera = new Cam2d(context, MainActivity.principal,earthSphere);
-//        NuevaCamara arcballCamera = new NuevaCamara(context,MainActivity.principal,earthSphere);
         Log.e("CAMARA", "camara creada");
-//        ArcballCamera arcballCamera = new ArcballCamera(context,MainActivity.principal,earthSphere);
-//        arcballCamera.setPosition(0, 0, 5);
         Log.e("CAMARA", "camara movida");
         //switch cameras
         getCurrentScene().replaceAndSwitchCamera(getCurrentCamera(), arcballCamera);
         arcballCamera.setPosition(0, 0, 0.5);
         Log.e("CAMARA", "switch camara");
-        //start the player
-//        mMediaPlayer.start();
-        Log.e("CAMARA", "player start");
-
-//        Matrix4 projection = new Matrix4();
-//        arcballCamera.getProjectionMatrix();
-
-        arcballCamera.setProjectionMatrix(getViewportWidth(),getViewportHeight());
-        for(int i=0; i<16; i++){
-            Log.e("PROY", "elemento "+i+" "+arcballCamera.getProjectionMatrix().getDoubleValues()[i]);
-        }
-
-//        videoLength=mMediaPlayer.getDuration();
-
-//        arcballCamera.setProjectionMatrix(arcballCamera.getFieldOfView(),getViewportWidth(),getViewportHeight());
 
     }
 
@@ -159,30 +129,25 @@ public class Renderer extends RajawaliRenderer {
     @Override
     public void onRender(final long elapsedTime, final double deltaTime) {
         super.onRender(elapsedTime, deltaTime);
-        arcballCamera.setCameraRoll(0);
-//        Log.e("CAMARA", "super onRender");
         if (video != null) {
             video.update();
-//            Log.e("CAMARA", "video updated");
         }
-//        getCurrentCamera().setCameraRoll(0);
-//        earthSphere.setRotZ(0);
-//        Log.e("ROT","correccion");
-//        android.opengl.GLES20.glFlush();
+        //if the screen is off, pause the mediaPlayer and store the current position for later restoring
         PowerManager mPowerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
         if (!mPowerManager.isScreenOn()){
             if (mMediaPlayer!= null && mMediaPlayer.isPlaying())
             {    mMediaPlayer.pause();
                 pausedPosition=mMediaPlayer.getCurrentPosition();
             }
-
         }
     }
 
+    //returns this renderer media player
     public MediaPlayer getMediaPlayer(){
         return this.mMediaPlayer;
     }
 
+    //changes renderer to touch mode
     public void toTouchMode(){
         if(mode!=touchMode){
             mode=touchMode;
@@ -190,18 +155,41 @@ public class Renderer extends RajawaliRenderer {
         }
     }
 
+    //changes renderer to gyro mode
     public void toGyroMode(){
         if(mode!=gyroMode){
             mode=gyroMode;
             arcballCamera.switchMode(mode);
-            Log.e("GYRO","de renderer a camara");
+            Log.e("GYRO", "de renderer a camara");
         }
     }
 
+    //changes renderer to cardboard mode
     public void toCardboardMode(){
         if(mode!=cardboardMode){
             mode=cardboardMode;
-//            getCurrentCamera().switchMode(mode);
+            arcballCamera.switchMode(mode);
+        }
+    }
+
+    //called when the renderer is paused. it pauses the renderer and the mediaPlayer
+    //storing its position
+    @Override
+    public void onPause(){
+        super.onPause();
+        if (mMediaPlayer!= null && mMediaPlayer.isPlaying())
+        {    mMediaPlayer.pause();
+            pausedPosition=mMediaPlayer.getCurrentPosition();
+        }
+    }
+
+    //called when the renderer is resumed from a pause.
+    //resumes mediaPlayer state
+    @Override
+    public void onResume(){
+        super.onResume();
+        if(mMediaPlayer!=null){
+            mMediaPlayer.seekTo(pausedPosition);
         }
     }
 }

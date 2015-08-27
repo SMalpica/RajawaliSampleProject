@@ -6,9 +6,7 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.util.DisplayMetrics;
 import android.util.Log;
-import android.view.Display;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.ScaleGestureDetector;
@@ -19,75 +17,59 @@ import android.view.WindowManager;
 import org.rajawali3d.Object3D;
 import org.rajawali3d.cameras.ArcballCamera;
 import org.rajawali3d.math.MathUtil;
-import org.rajawali3d.math.Matrix;
 import org.rajawali3d.math.Matrix4;
 import org.rajawali3d.math.Quaternion;
 import org.rajawali3d.math.vector.Vector2;
 import org.rajawali3d.math.vector.Vector3;
-
+//TODO: idea: quitar startOrientation quaternion?
 /**
- * Created by Fitur on 27/07/2015.
+ * Author: Sandra Malpica Mallo
+ * Date: 27/07/2015.
+ * Class: CamaraActualizada.java
+ * Comments: app camera. It displays the 3D OpenGL world created in the application to the
+ * device screen. Listens to the events that lead to the spheres rotation. Class extended
+ * from Rajawali ArcballCamera and modified
  */
 public class CamaraActualizada extends ArcballCamera implements SensorEventListener{
 
-    private Context mContext;
-    private ScaleGestureDetector mScaleDetector;
-    private View.OnTouchListener mGestureListener;
-    private GestureDetector mDetector;
-    private View mView;
-    private boolean mIsRotating;
-    private boolean mIsScaling;
-    private Vector3 mCameraStartPos;
-    private Vector3 mPrevSphereCoord;
-    private Vector3 mCurrSphereCoord;
-    private Vector2 mPrevScreenCoord;
-    private Vector2 mCurrScreenCoord;
-    private Quaternion mStartOrientation;
-    private Quaternion mCurrentOrientation;
-    private Object3D mEmpty;
-    private Object3D mTarget;
-    private Matrix4 mScratchMatrix;
-    private Vector3 mScratchVector;
-    private double mStartFOV;
-    private final double gbarridoX = 120;
-    private final double gbarridoY = 90;
-    private double gradosxpixelX;
-    private double gradosxpixelY;
-    private double giradoenX = 0;
-    private double giradoenY = 0;
-    private double xAnterior;
-    private double yAnterior;
-    private double yaw=0,pitch=0,roll=0;
-    private double yawo=0, pitcho=0, rollo=0;
-//    private double yawAnterior=0;
-    private final int touchMode=0;
-    private final int gyroMode=1;
-    private int mode;
-    private int axisx,axisy,axisz;
-    private SensorManager sm;
-    private boolean medicionInicial=true;
-//    private boolean salto=true;
+    private Context mContext;                       //app context
+    private ScaleGestureDetector mScaleDetector;    //scale gesture detector for zooming
+    private View.OnTouchListener mGestureListener;  //gesture detector for touch mode
+    private GestureDetector mDetector;              //gesture detector
+    private View mView;                             //cameras view
+    private boolean mIsRotating;                    //true if the sphere is rotating
+    private boolean mIsScaling;                     //true if the sphere is scaling
+    private Vector3 mCameraStartPos;                //camera start position (not used)
+    private Vector3 mPrevSphereCoord;               //previous sphere coordinates (3D)
+    private Vector3 mCurrSphereCoord;               //current sphere coordinates (3D)
+    private Vector2 mPrevScreenCoord;               //previous sphere coordinates (2D)
+    private Vector2 mCurrScreenCoord;               //current sphere coordinates (2D)
+    private Quaternion mStartOrientation;           //start orientation (for a rotation movement)
+    private Quaternion mCurrentOrientation;         //current orientation
+    private Object3D mEmpty;                        //auxiliary target 3D object used for rotation
+    private Object3D mTarget;                       //actual camera target
+    private Matrix4 mScratchMatrix;                 //auxiliary scratch matrix
+    private Vector3 mScratchVector;                 //auxiliary scratch 3D vector
+    private double mStartFOV;                       //start cameras field of view
+    private final double gbarridoX = 120;           //degrees to screen touch conversion (X axis)
+    private final double gbarridoY = 90;            //degrees to screen touch conversion (Y axis)
+    private double gradosxpixelX;                   //degrees to pixel conversion (X axis)
+    private double gradosxpixelY;                   //degrees to pixel conversion (Y axis)
+    private double xAnterior;                       //last x touched point (screen coordinates)
+    private double yAnterior;                       //last y touched point (screen coordinates)
+    private double yaw=0,pitch=0,roll=0;            //cameras yaw, pitch and roll used in gyro rotation
+    private final int touchMode=0;                  //touch camera mode (rotating with touch events)
+    private final int gyroMode=1;                   //gyro camera mode (rotating with devices sensors)
+    private int mode;                               //actual mode
+    private SensorManager sm;                       //sensor manager
+    private boolean medicionInicial=true;           //tells if its the first sensor reading
 
-
-
-    /******************************/
-//    private float mPreviousX;
-//    private float mPreviousY;
-//
-//    private float mDensity;
-//    private volatile float mDeltaX;
-//    private volatile float mDeltaY;
-//    /** Store the accumulated rotation. */
-//    private final double[] mAccumulatedRotation = new double[16];
-//
-//    /** Store the current rotation. */
-//    private final double[] mCurrentRotation = new double[16];
-    /******************************/
-
+    //class constructor without a target
     public CamaraActualizada(Context context, View view) {
         this(context, view, null);
     }
 
+    //class constructor. initializes basic parameters of the camera
     public CamaraActualizada(Context context, View view, Object3D target) {
         super(context,view,target);
         mContext = context;
@@ -102,6 +84,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         sm=(SensorManager)context.getSystemService(Context.SENSOR_SERVICE);
     }
 
+    //initializes auxiliary variables
     private void initialize() {
         mStartFOV = mFieldOfView;
         mLookAtEnabled = true;
@@ -116,22 +99,15 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         mCurrScreenCoord = new Vector2();
         mStartOrientation = new Quaternion();
         mCurrentOrientation = new Quaternion();
-
-        /********************************************/
-//        final DisplayMetrics displayMetrics = new DisplayMetrics();
-//        WindowManager wm = (WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
-//        wm.getDefaultDisplay().getMetrics(displayMetrics);
-//        mDensity = displayMetrics.density;
-//        // Initialize the accumulated rotation matrix
-//        Matrix.setIdentityM(mAccumulatedRotation, 0);
-        /********************************************/
     }
 
+    //sets the cameras projection matrix
     @Override
     public void setProjectionMatrix(int width, int height) {
         super.setProjectionMatrix(width, height);
     }
 
+    //maps 2D coordinates(a point the user has touched) to 3D sphere coordinates
     private void mapToSphere(final float x, final float y, Vector3 out)
     {
         float lengthSquared = x * x + y * y;
@@ -143,7 +119,6 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         else
         {
             out.setAll(x, y, Math.sqrt(1 - lengthSquared));
-//            out.setAll(x,y,0);//rota 90,180,270 grados
         }
     }
 
@@ -154,10 +129,12 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         out.setY(-(2 * y - mLastHeight) / mLastHeight);
     }
 
+    //starts the rotation in touch mode
     private void startRotation(final float x, final float y)
     {
         if(mode==touchMode){
             mapToScreen(x, y, mPrevScreenCoord);
+            //sets the current rotation coordinates
             mCurrScreenCoord.setAll(mPrevScreenCoord.getX(), mPrevScreenCoord.getY());
 
             mIsRotating = true;
@@ -166,64 +143,32 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         }
     }
 
+    //updates the rotation as the user scrolls through the screen
     private void updateRotation(final float x, final float y)
     {
         if(mode==touchMode){
             mapToScreen(x, y, mCurrScreenCoord);
-    //        Log.e("orig", "x " + x + " y " + y);
-    //        Log.e("TO_SCREEN", "x "+mCurrScreenCoord.getX()+" y "+mCurrScreenCoord.getY());
-    //        Log.e("UPD_ROT_COORD","x "+x+" y "+y);
-    //        applyRotation();
-            applyRotation(x,y);
+            applyRotation(x,y); //applies the rotation in touch mode
         }else{
-            applyRotationG();
+            applyRotationG();   //applies the rotation in gyro mode
         }
     }
 
+    //creates a quaternion from yaw, pitch and roll sensor values to rotate the sphere
     private void applyRotationG(){
-//        Log.e("GYRO","yaw "+yaw+" pitch "+pitch+" roll "+roll);
         if(this.mIsRotating){
-//            this.mCurrentOrientation.fromEuler(yaw, pitch, roll);
-
-//            if(yaw<-100) yaw=-90;//no funciona
-//            yaw+=180+90;
-//            double resta = yaw-yawAnterior;
-//            if(yaw<185 && yaw>180 && resta<0 && salto){
-//                System.out.println("yaw alto "+yaw);
-//                yaw=176;
-//                salto=false;
-//            }else if(yaw>180 && yaw<185 && resta>0 && salto){
-//                System.out.println("yaw bajo "+yaw);
-//                yaw=185;
-//                salto=false;
-//            }else if(yaw<178 || yaw > 187) salto=true;
-
-//            System.out.println("yaw "+yaw+" pitch "+pitch+" roll "+0.0);
-//            if(yaw>360){
-//                System.out.println("Limite superado "+yaw);
-//            }
-//            System.out.println("yaw "+yaw);
             this.mCurrentOrientation.fromEuler(-yaw, -pitch, 0.0);
-//            yawAnterior=yaw;
-//            Log.e("NUEVO","x w current pre normalize roll"+mCurrentOrientation.getRoll());
             this.mCurrentOrientation.normalize();
             this.mEmpty.setOrientation(mCurrentOrientation);
-//            Log.e("NUEVO","x q current post normalize roll"+mCurrentOrientation.getRoll());
-//            Quaternion q = new Quaternion(this.mStartOrientation);
-//            q.multiply(this.mCurrentOrientation);
-//            normalizedQuaternion(q);
-//            this.mEmpty.setOrientation(mCurrentOrientation);
-//            Log.e("GYRO","m esta rotando");
         }
     }
 
+    //creates a quaternion from scrolled vector in the screen to rotate the sphere
     private void applyRotation(float x, float y){
         this.gradosxpixelX = gbarridoX/mLastWidth;
         this.gradosxpixelY = gbarridoY/mLastHeight;
-//        Log.e("NUEVO","grados x "+x+" "+ this.xAnterior+"  "+this.gradosxpixelX);
         double gradosX = (x - this.xAnterior)*this.gradosxpixelX; //rotation around Y axis - yaw
         double gradosY = (y - this.yAnterior)*this.gradosxpixelY; //rotation around X axis - pitch
-//        Log.e("NUEVO","x "+gradosX+" y "+y);
         if(this.mIsRotating) {
             this.mCurrentOrientation.fromEuler(gradosX, gradosY, 0);
             Log.e("NUEVO","x w current pre normalize roll"+mCurrentOrientation.getRoll());
@@ -231,15 +176,11 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
             Log.e("NUEVO","x q current post normalize roll"+mCurrentOrientation.getRoll());
             Quaternion q = new Quaternion(this.mStartOrientation);
             q.multiply(this.mCurrentOrientation);
-//            normalizedQuaternion(q);
             this.mEmpty.setOrientation(q);
         }
     }
 
-//    private double aRadianes(double grados){
-//        return (grados*2*Math.PI*75)/360.0;
-//    }
-
+    //ends the sphere rotation
     private void endRotation()
     {
         mStartOrientation.multiply(mCurrentOrientation);
@@ -261,86 +202,9 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
 //            normalizedQuaternion(q);
             this.mEmpty.setOrientation(q);
         }
-//        if (mIsRotating)
-//        {
-//
-//            mapToSphere((float) mPrevScreenCoord.getX(), (float) mPrevScreenCoord.getY(), mPrevSphereCoord);
-//            mapToSphere((float) mCurrScreenCoord.getX(), (float) mCurrScreenCoord.getY(), mCurrSphereCoord);
-///*//            Log.e("ESF","esfere coordinates x "+mCurrSphereCoord.x+" y "+mCurrSphereCoord.y+" z "+mCurrSphereCoord.z);
-//            Vector3 dist = new Vector3(mCurrSphereCoord.x-mPrevSphereCoord.x,mCurrSphereCoord.y-mPrevSphereCoord.y,mCurrSphereCoord.z-mPrevSphereCoord.z);
-//            double R = Math.sqrt(Math.pow(mCurrSphereCoord.x,2)+Math.pow(mCurrSphereCoord.y,2)+Math.pow(mCurrSphereCoord.z,2));
-//            Quaternion q=new Quaternion();
-////            mEmpty.setOrientation(new Quaternion(1,0,0,0));
-////            Log.e("ORI","or antes"+mEmpty.getOrientation(q).x);
-////            mEmpty.rotate(Vector3.Axis.Z,Math.acos(Math.min(1,dist.z/R)));
-////            mEmpty.rotate(Vector3.Axis.Y,Math.acos(Math.min(1,dist.y / R)));
-////            mEmpty.rotate(Vector3.Axis.X, Math.acos(Math.min(1, dist.x / R)));
-////            Log.e("ORI", "or despues" + mEmpty.getOrientation(q).x);
-//            q = normalizedQuaternion(q);
-//            mEmpty.setRotation(Math.acos(dist.x/R),Math.acos(dist.y/R),Math.acos(dist.z/R));
-//            dist.normalize();*/
-//
-//            Vector3 rotationAxis = mPrevSphereCoord.clone();
-//            rotationAxis.cross(mCurrSphereCoord);
-//            rotationAxis.normalize();
-//            double rotationAngle = Math.acos(Math.min(1, mPrevSphereCoord.dot(mCurrSphereCoord)));
-////            mCurrentOrientation.fromAngleAxis(rotationAxis, MathUtil.radiansToDegrees(-rotationAngle));
-//            mCurrentOrientation.fromAngleAxis(rotationAxis, MathUtil.radiansToDegrees(-rotationAngle));
-//            mCurrentOrientation.normalize();
-//
-//            Quaternion q = new Quaternion(mStartOrientation);
-//            q.multiply(mCurrentOrientation);
-//
-//            q = normalizedQuaternion(q);
-//
-//            mEmpty.setOrientation(q);
-//        }
     }
 
     public Quaternion normalizedQuaternion(Quaternion quaternion){
-        /*double pitch = quaternion.getPitch();
-        double roll = quaternion.getRoll();
-        double yaw = quaternion.getYaw();
-        Log.e("QUAT","roll "+roll );
-        Log.e("QUAT","pitch "+pitch);
-        Log.e("QUAT","yaw "+yaw );
-        *//*if(pitch > MathUtil.HALF_PI){
-            pitch = MathUtil.HALF_PI;
-        }else if(pitch < -MathUtil.HALF_PI){
-            pitch = -MathUtil.HALF_PI;
-        }*//*
-        Log.e("QUAT1","roll "+roll );
-        Log.e("QUAT1","pitch "+pitch);
-        Log.e("QUAT1","yaw "+yaw );
-        return quaternion.fromEuler(yaw,pitch,roll);*/
-
-
-        /*double x = quaternion.x;
-        double y = quaternion.y;
-        double z = quaternion.z;
-        double w = quaternion.w;
-        double heading = Math.atan2(2*y*w-2*x*z,1-2*Math.pow(y,2)-2*Math.pow(z,2));
-        double attitude = Math.asin(2 * (x * y) + 2 * (z * w));
-        double bank = Math.atan2(2 * x * w - 2 * y * z, 1 - 2 * Math.pow(x, 2) - 2 * Math.pow(z, 2));
-
-        if(attitude > MathUtil.HALF_PI){
-            attitude = MathUtil.HALF_PI;
-        }else if(attitude < -MathUtil.HALF_PI){
-            attitude = -MathUtil.HALF_PI;
-        }
-        bank = 0;
-        Quaternion q = new Quaternion(w,x,y,z);
-        q.fromEuler(heading,attitude,bank);
-        quaternion.multiply(q);
-//        q.fromEuler(heading,attitude,bank);
-        return quaternion;*/
-
-
-//        Quaternion qt = new Quaternion(), qx =  new Quaternion(), qy =  new Quaternion(), qz =  new Quaternion();
-        /*double q1 = quaternion.x;
-        double q2 = quaternion.y;
-        double q3 = quaternion.z;
-        double q0 = quaternion.w;*/
         double x = quaternion.x;
         double y = quaternion.y;
         double z = quaternion.z;
@@ -357,24 +221,10 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         /*double alpha = Math.atan2(2*((q0*q1)+(q2*q3)), 1-2*(Math.pow(q1,2)+ Math.pow(q2,2)));
         double beta = Math.asin(-2 * (q0 * q2 - q3 * q1));
         double gamma = Math.atan2(2 * ((q0 * q3) + (q1 * q2)), 1 - 2 * (Math.pow(q2, 2) + Math.pow(q3, 2)));*/
-        /*if(gamma > MathUtil.HALF_PI){
-            gamma = MathUtil.HALF_PI-0.1;
-            Log.e("EH?","cambio hecho+");
-        }else if(gamma < -MathUtil.HALF_PI){
-            gamma = -MathUtil.HALF_PI + 0.1;
-            Log.e("EH?","cambio hecho-");
-        }*/
-//        gamma=0;
-//        Log.e("EH?", "yaw " + yaw + " pitch " + pitch + " roll " + roll);
-        /*qx.fromAngleAxis(Vector3.Axis.X,yaw);
-        qy.fromAngleAxis(Vector3.Axis.Y,pitch);
-        qz.fromAngleAxis(Vector3.Axis.Z,roll);
-        qt = qx.multiply(qy);
-        qt.multiply(qz);
-        quaternion.multiply(qt);*/
         return quaternion;
     }
 
+    //gets the camera view matrix to the renderer, inverting the spheres rotation
     @Override
     public Matrix4 getViewMatrix() {
             Matrix4 m = super.getViewMatrix();
@@ -396,78 +246,9 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
             }
 
             return m;
-
-////        Log.e("CAMARA","en getviewmatrix");
-//        Matrix4 m = super.getModelMatrix();
-//
-////        Matrix4 m = super.getProjectionMatrix();
-//        /********************************************************/
-////        super.getModelMatrix(); //ojo!!! por que tengo dos aqui? cual uso, objeto o camara? Objeto de momento
-////        double[] mTemporaryMatrix = new double[16];
-////        double[] mModel = new double[16];
-////        Matrix4 m = super.getViewMatrix();
-////        Matrix4 mm = super.getModelMatrix();
-////        Matrix4 mModel;
-//        /********************************************************/
-//
-//        //takes to m the target position
-//        if(mTarget != null) {
-//            /********************************************************/
-////            /*miar esto!!*/
-//////            Log.e("CAMARA","getview dentro if");
-////            mModel = this.mTarget.getModelViewMatrix().getDoubleValues(); //ojo!!! te puede servir!!
-//////            mModel = this.mTarget.getModelViewProjectionMatrix().getDoubleValues();
-//////            mModel = this.mTarget.getModelMatrix().getDoubleValues();
-////            Matrix.setIdentityM(mCurrentRotation,0);
-////            Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0f, 1f, 0f); //ojo! esto parece que esta al reves
-//////            Log.e("ROTATEM","mDeltaX "+mDeltaX+" mDeltaY "+mDeltaY);
-////            Matrix.rotateM(mCurrentRotation, 0, mDeltaY, 1f, 0f, 0f); //ojo! esto parece que esta al reves
-////            mDeltaX = 0.0f;
-////            mDeltaY = 0.0f;
-////            // Multiply the current rotation by the accumulated rotation, and then set the accumulated
-////            // rotation to the result.
-////            Matrix.multiplyMM(mTemporaryMatrix, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
-////            System.arraycopy(mTemporaryMatrix, 0, mAccumulatedRotation, 0, 16);
-////            // Rotate the cube taking the overall rotation into account.
-////            Matrix.multiplyMM(mTemporaryMatrix, 0, mModel, 0, mAccumulatedRotation, 0);
-////            System.arraycopy(mTemporaryMatrix, 0, mModel, 0, 16);
-////            Matrix.multiplyMM(mTemporaryMatrix, 0, mm.getDoubleValues(), 0, m.getDoubleValues(), 0);
-////            double[] aux = new double[16];
-////            Matrix.multiplyMM(aux, 0, mModel, 0, mTemporaryMatrix, 0);
-////
-////
-//////            System.arraycopy(mTemporaryMatrix,0,aux,0,16);
-////            m = new Matrix4(aux);
-////            mScratchVector.setAll(mTarget.getPosition());
-////            mScratchVector.inverse();
-////
-////            mScratchMatrix.identity();
-////            mScratchMatrix.translate(mScratchVector);
-////            m.multiply(mScratchMatrix);
-//////            Log.e("CAMARA", "en getviewmatrix final");
-////            return m;
-//            /********************************************************/
-//            mScratchMatrix.identity();
-//            mScratchMatrix.translate(mTarget.getPosition());
-//            m.multiply(mScratchMatrix);
-//        }
-//        //combines it with the orientation needed
-//        mScratchMatrix.identity();
-//        mScratchMatrix.rotate(mEmpty.getOrientation());
-//        m.multiply(mScratchMatrix);
-//        //inverts the result
-//        if(mTarget != null) {
-//            mScratchVector.setAll(mTarget.getPosition());
-//            mScratchVector.inverse();
-//
-//            mScratchMatrix.identity();
-//            mScratchMatrix.translate(mScratchVector);
-//            m.multiply(mScratchMatrix);
-//        }
-//
-//        return m;
     }
 
+    //sets the camera field of view
     public void setFieldOfView(double fieldOfView) {
         synchronized (mFrustumLock) {
             mStartFOV = fieldOfView;
@@ -475,30 +256,36 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         }
     }
 
+    //adds event listeners to the camera
     private void addListeners() {
+        //these have to be run in the UI thread as the interact with interface fragments
         ((Activity) mContext).runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 mDetector = new GestureDetector(mContext, new GestureListener());
                 mScaleDetector = new ScaleGestureDetector(mContext, new ScaleListener());
-
+                //sets the ontouchlistener
                 mGestureListener = new View.OnTouchListener() {
                     public boolean onTouch(View v, MotionEvent event) {
-                        mScaleDetector.onTouchEvent(event);
+                        mScaleDetector.onTouchEvent(event);//sees if it is scaling
 
                         if (!mIsScaling) {
+                            //if it isn't, it can be a rotation
                             mDetector.onTouchEvent(event);
 
+                            //when the finger is moved up from the screen
                             if (event.getAction() == MotionEvent.ACTION_UP) {
+                                //if the sphere was rotating, rotation is stopped
                                 if (mIsRotating && mode==touchMode) {
                                     endRotation();
                                     mIsRotating = false;
                                 }else{
+                                    //else, the control video view changes its visibility
                                     System.out.println("triger up");
                                     MainActivity.timer.cancel();
                                     if (MainActivity.control.getVisibility() == View.INVISIBLE) {
                                         MainActivity.control.setVisibility(View.VISIBLE);
-                                        MainActivity.timer.start();
+                                        MainActivity.timer.start(); //timer is restarted
                                     } else {
                                         MainActivity.control.setVisibility(View.INVISIBLE);
                                     }
@@ -514,57 +301,37 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         });
     }
 
+    //sets the camera target (3D object to which the camera is looking at)
     public void setTarget(Object3D target) {
         mTarget = target;
         setLookAt(mTarget.getPosition());
     }
 
+    //returns this camera target object
     public Object3D getTarget() {
         return mTarget;
     }
 
+    //scroll listener
     private class GestureListener extends GestureDetector.SimpleOnGestureListener {
         @Override
         public boolean onScroll(MotionEvent event1, MotionEvent event2, float distanceX, float distanceY) {
-            /*********************************************/
-//            if (event2 != null){
-//                float x = event2.getX();
-//                float y = event2.getY();
-//
-//                if (event2.getAction() == MotionEvent.ACTION_MOVE){
-//                    if (CamaraActualizada.this != null){
-//                        float deltaX = (x - mPreviousX) / mDensity / 2f;
-//                        float deltaY = (y - mPreviousY) / mDensity / 2f;
-//
-//                        CamaraActualizada.this.mDeltaX += deltaX;
-//                        CamaraActualizada.this.mDeltaY += deltaY;
-//                        CamaraActualizada.this.mDeltaY*=0.0005;
-//                        CamaraActualizada.this.mDeltaX*=0.0005;
-//                    }
-//                }
-//
-//                mPreviousX = x;
-//                mPreviousY = y;
-//
-//                return true;
-//            }
-//            return false;
-            /*********************************************/
+            //starts or updates the rotation with the upcoming event x and y screen values
             if(!mIsRotating) {
                 startRotation(event2.getX(), event2.getY());
                 return false;
             }else{
                 mIsRotating = true;
                 updateRotation(event2.getX(), event2.getY());
-//                Log.e("COORD_GLISTENER","x "+event2.getX()+" y "+event2.getY());
-//                Log.e("DIST_GLISTENER"," X "+distanceX+" Y "+distanceY);
                 return false;
             }
         }
     }
 
+    //scale listener
     private class ScaleListener
             extends ScaleGestureDetector.SimpleOnScaleGestureListener {
+        //zooms in or out according to the scale detector value
         @Override
         public boolean onScale(ScaleGestureDetector detector) {
             double fov = Math.max(30.0D, Math.min(54.0D, CamaraActualizada.this.mStartFOV * (1.0D / (double)detector.getScaleFactor())));
@@ -572,6 +339,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
             return true;
         }
 
+        //the zoom begins
         @Override
         public boolean onScaleBegin (ScaleGestureDetector detector) {
             mIsScaling = true;
@@ -579,6 +347,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
             return super.onScaleBegin(detector);
         }
 
+        //the zoom ends
         @Override
         public void onScaleEnd (ScaleGestureDetector detector) {
             mIsRotating = false;
@@ -586,15 +355,9 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         }
     }
 
+    //method called when the registered sensors change
     @Override
     public void onSensorChanged(SensorEvent event){
-//        if(event.accuracy!=SensorManager.SENSOR_STATUS_UNRELIABLE){
-//            roll = fromRadiantoDegree(event.values[2]);
-//            pitch = fromRadiantoDegree(event.values[1]);
-//            yaw = fromRadiantoDegree(event.values[0]);
-//            //applyRotationG();
-//            Log.e("GYRO", "onSensorChanged roll " + roll + " pitch " + pitch + " yaw " + yaw);
-//        }
         // It is good practice to check that we received the proper sensor event
         System.out.println("onSensorChanged");
         if (event.sensor.getType() == Sensor.TYPE_ROTATION_VECTOR)
@@ -610,53 +373,24 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
                            SensorManager.AXIS_X, SensorManager.AXIS_Z,
                             mAuxMatrix);
             SensorManager.getOrientation(mAuxMatrix, orientationVals);
-//            SensorManager.getOrientation(mRotationMatrix,orientationVals);
             // Optionally convert the result from radians to degrees
             orientationVals[0] = (float) Math.toDegrees(orientationVals[0]);
             orientationVals[1] = (float) Math.toDegrees(orientationVals[1]);
             orientationVals[2] = (float) Math.toDegrees(orientationVals[2]);
 
-           /* SensorManager.getRotationMatrixFromVector(mAuxMatrix, event.values);
-            SensorManager.remapCoordinateSystem(mAuxMatrix,
-                    SensorManager.AXIS_X, SensorManager.AXIS_Z,
-                    mRotationMatrix);
-            SensorManager.getOrientation(mRotationMatrix, orientationVals);
-
-            // Optionally convert the result from radians to degrees
-            orientationVals[0] = (float) Math.toDegrees(orientationVals[0]);
-            orientationVals[1] = (float) Math.toDegrees(orientationVals[1]);
-            orientationVals[2] = (float) Math.toDegrees(orientationVals[2]);*/
-
             System.out.println(" Yaw: " + orientationVals[0] + " Pitch: "
                     + orientationVals[1] + " Roll (not used): "
                     + orientationVals[2]);
 
-
-
-//            if(orientationVals[2]>160) orientationVals[2]=160;
-//            else if(orientationVals[2]<-160) orientationVals[2]=-160;
             yaw=orientationVals[0];
-//            if(orientationVals[1]>90) orientationVals[1]=90;
-//            else if(orientationVals[1]<-90) orientationVals[1]=-90;
             pitch = orientationVals[1];
-//            if(orientationVals[0]>160) orientationVals[0]=161;
-//            else if(orientationVals[0]<-160) orientationVals[0]=-162;
             roll = orientationVals[2];
-            WindowManager windowManager=(WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
-
-            int orientacion =windowManager.getDefaultDisplay().getRotation();
-
-//            yaw=180;
-//            pitch=0;
-//            roll=0;
+            //to know what is the device actual orientation
+//            WindowManager windowManager=(WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
+//            int orientacion =windowManager.getDefaultDisplay().getRotation();
             applyRotationG();
 
         }
-    }
-
-    private double fromRadiantoDegree(double radian){
-        //return (360*radian)/2.0*Math.PI*100;
-        return radian*100;
     }
 
     @Override
@@ -665,13 +399,13 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         //Do nothing.
     }
 
+    //changes the camera mode
     public void switchMode(int m){
         this.mode=m;
         Log.e("GYRO","mode switched to " + mode);
         if (mode == gyroMode){
             Log.e("GYRO", "gyro registered");
             sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST);
-//            this.getTarget().rotate(Vector3.Axis.Z,90);
             //correccion del yaw, pitch y roll
             if(medicionInicial){
                 medicionInicial=false;
@@ -681,8 +415,6 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
                     case Surface.ROTATION_0:
                         break;
                     case Surface.ROTATION_90:
-                        axisx=SensorManager.AXIS_MINUS_Y;
-                        axisy=SensorManager.AXIS_MINUS_X;
                         break;
                     case Surface.ROTATION_180:
                         break;
@@ -699,175 +431,4 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
             medicionInicial=true;
         }
     }
-
-    /*
-    *
-    * Rotating an object in 3D is a neat way of letting your users interact with the scene, but the
-    * math can be tricky to get right. In this article, I’ll take a look at a simple way to rotate
-    * an object based on the touch events, and how to work around the main drawback of this method.
-    * Simple rotations. This is the easiest way to rotate an object based on touch movement. Here
-    * is example pseudocode:
-    *
-    * Matrix.setIdentity(modelMatrix);
-    * ... do other translations here ...
-    * Matrix.rotateX(totalYMovement);
-    * Matrix.rotateY(totalXMovement);
-    *
-    * This is done every frame.
-    *
-    * To rotate an object up or down, we rotate it around the X-axis, and to rotate an object left
-    * or right, we rotate it around the Y axis. We could also rotate an object around the Z axis if
-    * we wanted it to spin around.
-    * How to make the rotation appear relative to the user’s point of view.
-    * The main problem with the simple way of rotating is that the object is being rotated in
-    * relation to itself, instead of in relation to the user’s point of view. If you rotate left and
-    * right from a point of zero rotation, the cube will rotate as you expect, but what if you then
-    * rotate it up or down 180 degrees? Trying to rotate the cube left or right will now rotate it
-    * in the opposite direction!
-    * One easy way to work around this problem is to keep a second matrix around that will store all
-    * of the accumulated rotations.
-    *
-    * Here’s what we need to do:
-    * Every frame, calculate the delta between the last position of the pointer, and the current
-    * position of the pointer. This delta will be used to rotate our accumulated rotation matrix.
-    * Use this matrix to rotate the cube. What this means is that drags left, right, up, and down
-    * will always move the cube in the direction that we expect.
-    *
-    * Android Code
-    * The code examples here are written for Android, but can easily be adapted to any platform
-    * running OpenGL ES.
-    * The code is based on Android Lesson Six: An Introduction to Texture Filtering.
-    *
-    * In LessonSixGLSurfaceView.java, we declare a few member variables:
-    private float mPreviousX; private float mPreviousY; private float mDensity;
-    *
-    * We will store the previous pointer position each frame, so that we can calculate the relative
-    * movement left, right, up, or down. We also store the screen density so that drags across the
-    * screen can move the object a consistent amount across devices, regardless of the pixel density.
-    *
-    * Here’s how to get the pixel density:
-    * final DisplayMetrics displayMetrics = new DisplayMetrics();
-    getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-    density = displayMetrics.density;
-    *
-    * Then we add our touch event handler to our custom GLSurfaceView:
-    *
-
-public boolean onTouchEvent(MotionEvent event)
-{
-    if (event != null)
-    {
-        float x = event.getX();
-        float y = event.getY();
-
-        if (event.getAction() == MotionEvent.ACTION_MOVE)
-        {
-            if (mRenderer != null)
-            {
-                float deltaX = (x - mPreviousX) / mDensity / 2f;
-                float deltaY = (y - mPreviousY) / mDensity / 2f;
-
-                mRenderer.mDeltaX += deltaX;
-                mRenderer.mDeltaY += deltaY;
-            }
-        }
-
-        mPreviousX = x;
-        mPreviousY = y;
-
-        return true;
-    }
-    else
-    {
-        return super.onTouchEvent(event);
-    }
-}
-    * Every frame, we compare the current pointer position with the previous, and use that to
-    * calculate the delta offset. We then divide that delta offset by the pixel density and a
-    * slowing factor of 2.0f to get our final delta values. We apply those directly to the renderer
-    * to a couple of public variables that we have also declared as volatile, so that they can be
-    * updated between threads.
-    * Remember, on Android, the OpenGL renderer runs in a different thread than the UI event handler
-    * thread, and there is a slim chance that the other thread fires in-between the X and Y variable
-    * assignments (there are also additional points of contention with the += syntax). I have left
-    * the code like this to bring up this point; as an exercise for the reader I leave it to you to
-    * add synchronized statements around the public variable read and write pairs instead of
-    * using volatile variables. First, let’s add a couple of matrices and initialize them:
-
-// Store the accumulated rotation.
-    private final float[] mAccumulatedRotation = new float[16];
-
-// Store the current rotation.
-    private final float[] mCurrentRotation = new float[16];
-    @Override
-    public void onSurfaceCreated(GL10 glUnused, EGLConfig config)
-    {
-
-        // Initialize the accumulated rotation matrix
-        Matrix.setIdentityM(mAccumulatedRotation, 0);
-    }
-    Here’s what our matrix code looks like in the onDrawFrame method:
-
-// Draw a cube.
-// Translate the cube into the screen.
-            Matrix.setIdentityM(mModelMatrix, 0);
-    Matrix.translateM(mModelMatrix, 0, 0.0f, 0.8f, -3.5f);
-
-// Set a matrix that contains the current rotation.
-    Matrix.setIdentityM(mCurrentRotation, 0);
-    Matrix.rotateM(mCurrentRotation, 0, mDeltaX, 0.0f, 1.0f, 0.0f);
-    Matrix.rotateM(mCurrentRotation, 0, mDeltaY, 1.0f, 0.0f, 0.0f);
-    mDeltaX = 0.0f;
-    mDeltaY = 0.0f;
-
-// Multiply the current rotation by the accumulated rotation, and then set the accumulated
-// rotation to the result.
-    Matrix.multiplyMM(mTemporaryMatrix, 0, mCurrentRotation, 0, mAccumulatedRotation, 0);
-    System.arraycopy(mTemporaryMatrix, 0, mAccumulatedRotation, 0, 16);
-
-// Rotate the cube taking the overall rotation into account.
-    Matrix.multiplyMM(mTemporaryMatrix, 0, mModelMatrix, 0, mAccumulatedRotation, 0);
-    System.arraycopy(mTemporaryMatrix, 0, mModelMatrix, 0, 16);
-    First we translate the cube.
-    Then we build a matrix that will contain the current amount of rotation, between this frame and the preceding frame.
-    We then multiply this matrix with the accumulated rotation, and assign the accumulated rotation to the result. The accumulated rotation contains the result of all of our rotations since the beginning.
-    Now that we’ve updated the accumulated rotation matrix with the most recent rotation, we finally rotate the cube by multiplying the model matrix with our rotation matrix, and then we set the model matrix to the result.
-    The above code might look a bit confusion due to the placement of the variables, so remember the definitions:
-
-    public static void multiplyMM (float[] result, int resultOffset, float[] lhs, int lhsOffset, float[] rhs, int rhsOffset)
-
-    public static void arraycopy (Object src, int srcPos, Object dst, int dstPos, int length)
-
-    Note the position of source and destination for each method call.
-
-    Trouble spots and pitfalls
-
-    The accumulated matrix should be set to identity once when initialized, and should not be reset to identity each frame.
-    Previous pointer positions must also be set on pointer down events, not only on pointer move events.
-    Watch the order of parameters, and also watch out for corrupting your matrices. Android’s Matrix.multiplyMM states that “the result element values are undefined if the result elements overlap either the lhs or rhs elements.” Use temporary matrices to avoid this problem.
-    * */
-
-    /*- (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event
-{
-    //como obtiene la x y la y del evento tactil
-    if(_isUsingMotion) return;
-    UITouch *touch = [touches anyObject];
-    float distX = [touch locationInView:touch.view].x -
-    [touch previousLocationInView:touch.view].x;
-    float distY = [touch locationInView:touch.view].y -
-    [touch previousLocationInView:touch.view].y;
-    distX *= -0.005;
-    distY *= -0.005;
-    _fingerRotationX += distY *  _overture / 100;
-    _fingerRotationY -= distX *  _overture / 100;
-
-    //como rota en el metodo update
-    else
-    {
-        modelViewMatrix = GLKMatrix4RotateX(modelViewMatrix, _fingerRotationX);
-        modelViewMatrix = GLKMatrix4RotateY(modelViewMatrix, _fingerRotationY);
-    }
-    _modelViewProjectionMatrix = GLKMatrix4Multiply(projectionMatrix, modelViewMatrix);
-        */
-
 }

@@ -23,6 +23,7 @@ import android.widget.TextView;
 
 import org.rajawali3d.surface.RajawaliSurfaceView;
 
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -44,12 +45,15 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     private TextView tiempoTotal;
     public static CountDownTimer timer;
     public LinearLayout view;       //view
+    private Thread controller;
+    public Semaphore lock;
 //    private boolean tieneAccel = false;
 
     /*method called when the activity is created*/
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        lock=new Semaphore(1);
 //        setContentView(R.layout.activity_main);
         //full-screen
         getWindow().setFlags(android.view.WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
@@ -155,12 +159,15 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         seekBar.setOnSeekBarChangeListener(this);
         //launch a thread to update seekBar progress (---each second----)
 
-        new Thread(new Runnable() {
+        controller= new Thread(new Runnable() {
             private int posicion;
             boolean primera = true;
             @Override
             public void run() {
                 while(primera || renderer.getMediaPlayer()!=null){
+                    try{
+                        lock.acquire();
+                    }catch(InterruptedException ex){}
                     while (renderer.getMediaPlayer()==null){}
                     while (!renderer.getMediaPlayer().isPlaying()){}
                     if(primera){
@@ -171,31 +178,31 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                         Thread.sleep(1000);
                         posicion = renderer.getMediaPlayer().getCurrentPosition();
                     tActual=posicion/1000;
-                    }catch(InterruptedException ex){
-
-                    }
-                    seekBar.setMax(renderer.videoLength);
+                    }catch(InterruptedException ex){}
+                    seekBar.setMax(renderer.getMediaPlayer().getDuration());
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             seekBar.setProgress(posicion);
-                            String am= String.format("%02d", tActual / 60);
-                            String as=String.format("%02d", tActual % 60);
-                            tiempoActual.setText(am+ ":" + as);
-                                if(primera){
-                                    am=String.format("%02d", tTotal / 60);
-                                    as=String.format("%02d", tTotal % 60);
-                                    System.out.println("am es "+am+" y su longitud "+am.length());
-                                    tiempoTotal.setText(am+":"+as);
-                                    System.out.println("prueba " + tTotal);
-                                    primera=false;
-                                }
+                            String am = String.format("%02d", tActual / 60);
+                            String as = String.format("%02d", tActual % 60);
+                            tiempoActual.setText(am + ":" + as);
+                            if (primera) {
+                                am = String.format("%02d", tTotal / 60);
+                                as = String.format("%02d", tTotal % 60);
+                                System.out.println("am es " + am + " y su longitud " + am.length());
+                                tiempoTotal.setText(am + ":" + as);
+                                System.out.println("prueba " + tTotal);
+                                primera = false;
+                            }
                         }
                     });
-
+                    lock.release();
                 }
+
             }
-        }).start();
+        });
+        controller.start();
         control=view;
         PackageManager pm = getPackageManager();
         tieneGiro = pm.hasSystemFeature(PackageManager.FEATURE_SENSOR_GYROSCOPE);
@@ -215,12 +222,6 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         } else {
             MainActivity.this.view.setVisibility(View.INVISIBLE);
         }
-    }
-
-    protected String getAsTime(int t) {
-        return String.format("%02d:%02d",
-                TimeUnit.MILLISECONDS.toSeconds(t) / 60,
-                TimeUnit.MILLISECONDS.toSeconds(t) - TimeUnit.MILLISECONDS.toSeconds(t) / 60 * 60);
     }
 
     @Override
@@ -250,9 +251,13 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         super.onPause();
         surface.onPause();
         renderer.onPause();
-        if(renderer!=null && renderer.getMediaPlayer()!=null){
-            renderer.getMediaPlayer().pause();
-        }
+//        if(renderer!=null && renderer.getMediaPlayer()!=null){
+//            renderer.getMediaPlayer().pause();
+//        }
+        try{
+            lock.acquire();
+        }catch(InterruptedException ex){}
+
     }
 
     @Override
@@ -261,11 +266,12 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         surface.onResume();
         renderer.onResume();
         if(renderer!=null && renderer.getMediaPlayer()!=null){
-            renderer.getMediaPlayer().start();
+            renderer.getMediaPlayer().seekTo(renderer.pausedPosition);
         }
         if(view.getVisibility()!=View.VISIBLE){
             view.setVisibility(View.VISIBLE);
         }
+        lock.release();
     }
 
     /********************************************************************************/

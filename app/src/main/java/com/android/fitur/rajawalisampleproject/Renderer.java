@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.MediaPlayer;
 import android.net.Uri;
 import android.opengl.Matrix;
+import android.os.PowerManager;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.ImageButton;
@@ -39,10 +40,10 @@ import java.io.IOException;
 //TODO: linkear con app principal. funcionalidad del backButton.
 //TODO: add animaciones o efectos en los elementos con los que el usuario puede interactuar.
 //notTODO: hacer que el control del video se desvanezca con inactividad / desaparezca con click.
-//TODO: arreglar problema al bloquar y desbloquear la pantalla sin parar de reproducir. Pasa en tablet, en movil no.
+//notTODO: arreglar problema al bloquar y desbloquear la pantalla sin parar de reproducir. Pasa en tablet, en movil no.
 //TODO: que no rote la esfera si deslizas sobre la barra de controles.
-//TODO: poner en los textview del control del video el tiempo total y el actual.
-//TODO: seekbar deja de funcionar al bloquear y desbloquear el movil
+//notTODO: poner en los textview del control del video el tiempo total y el actual.
+//notTODO: seekbar deja de funcionar al bloquear y desbloquear el movil
 
 /**
  * Author: Sandra Malpica Mallo
@@ -56,7 +57,7 @@ public class Renderer extends RajawaliRenderer {
     private Sphere earthSphere;     //sphere where the video will be displayed
     private MediaPlayer mMediaPlayer;   //mediaPLayer that holds the video
     StreamingTexture video;         //video texture to project on the sphere
-    public int videoLength;         //video length in ms
+    public int pausedPosition;         //video length in ms
     private final int touchMode=0;
     private final int gyroMode=1;
     private final int cardboardMode=2;
@@ -148,7 +149,7 @@ public class Renderer extends RajawaliRenderer {
             Log.e("PROY", "elemento "+i+" "+arcballCamera.getProjectionMatrix().getDoubleValues()[i]);
         }
 
-        videoLength=mMediaPlayer.getDuration();
+//        videoLength=mMediaPlayer.getDuration();
 
 //        arcballCamera.setProjectionMatrix(arcballCamera.getFieldOfView(),getViewportWidth(),getViewportHeight());
 
@@ -158,6 +159,7 @@ public class Renderer extends RajawaliRenderer {
     @Override
     public void onRender(final long elapsedTime, final double deltaTime) {
         super.onRender(elapsedTime, deltaTime);
+        arcballCamera.setCameraRoll(0);
 //        Log.e("CAMARA", "super onRender");
         if (video != null) {
             video.update();
@@ -167,6 +169,14 @@ public class Renderer extends RajawaliRenderer {
 //        earthSphere.setRotZ(0);
 //        Log.e("ROT","correccion");
 //        android.opengl.GLES20.glFlush();
+        PowerManager mPowerManager = (PowerManager) context.getSystemService(Context.POWER_SERVICE);
+        if (!mPowerManager.isScreenOn()){
+            if (mMediaPlayer!= null && mMediaPlayer.isPlaying())
+            {    mMediaPlayer.pause();
+                pausedPosition=mMediaPlayer.getCurrentPosition();
+            }
+
+        }
     }
 
     public MediaPlayer getMediaPlayer(){

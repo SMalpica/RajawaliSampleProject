@@ -19,6 +19,7 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.MediaController;
 import android.widget.SeekBar;
+import android.widget.TextView;
 
 import org.rajawali3d.surface.RajawaliSurfaceView;
 
@@ -37,7 +38,10 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
     public static View principal;   //surface
     public static View control;     //view
     private int modo=0;
+    private int tTotal,tActual;
     private boolean tieneGiro = false;
+    private TextView tiempoActual;
+    private TextView tiempoTotal;
     public static CountDownTimer timer;
     public LinearLayout view;       //view
 //    private boolean tieneAccel = false;
@@ -69,6 +73,8 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         ViewGroup viewGroup = (ViewGroup)getWindow().getDecorView().findViewById(android.R.id.content);
         view = (LinearLayout)layoutInflater.inflate(R.layout.player_control, null);
         view.setVerticalGravity(Gravity.BOTTOM);
+        tiempoActual = (TextView)view.findViewById(R.id.tiempoTranscurrido);
+        tiempoTotal = (TextView)view.findViewById(R.id.tiempoTotal);
         viewGroup.addView(view);
         //set the controls invisible when 3s pass and the user doesnt touch them.
         timer=new CountDownTimer(7000,7000){
@@ -148,6 +154,7 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
         /*seekBar tutorial from http://sapandiwakar.in/tutorial-how-to-manually-create-android-media-player-controls/ */
         seekBar.setOnSeekBarChangeListener(this);
         //launch a thread to update seekBar progress (---each second----)
+
         new Thread(new Runnable() {
             private int posicion;
             boolean primera = true;
@@ -156,25 +163,37 @@ public class MainActivity extends Activity implements SeekBar.OnSeekBarChangeLis
                 while(primera || renderer.getMediaPlayer()!=null){
                     while (renderer.getMediaPlayer()==null){}
                     while (!renderer.getMediaPlayer().isPlaying()){}
-                    primera=false;
-//                    try{
-//                        Thread.sleep(1000);
-//                    wait(1000);
+                    if(primera){
+                        tTotal=renderer.getMediaPlayer().getDuration()/1000;
+                    }
+
+                    try{
+                        Thread.sleep(1000);
                         posicion = renderer.getMediaPlayer().getCurrentPosition();
-//                    }catch(InterruptedException ex){
-//                        return;
-//                    }
-//                    Log.e("SEEKBAR","posicion "+posicion);
+                    tActual=posicion/1000;
+                    }catch(InterruptedException ex){
+
+                    }
                     seekBar.setMax(renderer.videoLength);
-//                    seekBar.setProgress(posicion);
                     runOnUiThread(new Runnable() {
                         @Override
                         public void run() {
                             seekBar.setProgress(posicion);
+                            String am= String.format("%02d", tActual / 60);
+                            String as=String.format("%02d", tActual % 60);
+                            tiempoActual.setText(am+ ":" + as);
+                                if(primera){
+                                    am=String.format("%02d", tTotal / 60);
+                                    as=String.format("%02d", tTotal % 60);
+                                    System.out.println("am es "+am+" y su longitud "+am.length());
+                                    tiempoTotal.setText(am+":"+as);
+                                    System.out.println("prueba " + tTotal);
+                                    primera=false;
+                                }
                         }
                     });
+
                 }
-//                Log.e("SEEKBAR","fin");
             }
         }).start();
         control=view;

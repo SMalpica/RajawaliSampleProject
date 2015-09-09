@@ -63,6 +63,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
     private int mode;                               //actual mode
     private SensorManager sm;                       //sensor manager
     private boolean medicionInicial=true;           //tells if its the first sensor reading
+    private Renderer renderer;
 
     //class constructor without a target
     public CamaraActualizada(Context context, View view) {
@@ -72,6 +73,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
     //class constructor. initializes basic parameters of the camera
     public CamaraActualizada(Context context, View view, Object3D target) {
         super(context,view,target);
+//        renderer=r;
         mContext = context;
         mTarget = target;
         mView = view;
@@ -159,6 +161,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         if(this.mIsRotating){
             this.mCurrentOrientation.fromEuler(-yaw, -pitch, 0.0);
             this.mCurrentOrientation.normalize();
+
             this.mEmpty.setOrientation(mCurrentOrientation);
         }
     }
@@ -365,6 +368,18 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
             float[] mRotationMatrix = new float[16];
             float[] mAuxMatrix = new float[16];
             float[] orientationVals = new float[3];
+
+
+            if(mode!=touchMode && mode!=gyroMode){
+//                Quaternion mQuaternion = new Quaternion();
+                SensorManager.getQuaternionFromVector(mRotationMatrix, event.values);
+                Matrix4 aux= this.getViewMatrix();
+//                renderer.setSensorOrientation(aux.getFloatValues());
+//                renderer.setCameraOrientation(mCurrentOrientation);
+            }
+
+
+
             // Convert the rotation-vector to a 4x4 matrix.
             SensorManager.getRotationMatrixFromVector(mRotationMatrix,
                     event.values);
@@ -372,6 +387,7 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
                     .remapCoordinateSystem(mRotationMatrix,
                            SensorManager.AXIS_X, SensorManager.AXIS_Z,
                             mAuxMatrix);
+
             SensorManager.getOrientation(mAuxMatrix, orientationVals);
             // Optionally convert the result from radians to degrees
             orientationVals[0] = (float) Math.toDegrees(orientationVals[0]);
@@ -405,30 +421,32 @@ public class CamaraActualizada extends ArcballCamera implements SensorEventListe
         Log.e("GYRO","mode switched to " + mode);
         if (mode == gyroMode){
             Log.e("GYRO", "gyro registered");
-            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST);
+//            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST);
             //correccion del yaw, pitch y roll
-            if(medicionInicial){
-                medicionInicial=false;
-                WindowManager windowManager=(WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
-                int orientacion =windowManager.getDefaultDisplay().getRotation();
-                switch(orientacion){
-                    case Surface.ROTATION_0:
-                        break;
-                    case Surface.ROTATION_90:
-                        break;
-                    case Surface.ROTATION_180:
-                        break;
-                    case Surface.ROTATION_270:
-                        break;
-                }
-            }
+//            if(medicionInicial){
+//                medicionInicial=false;
+//                WindowManager windowManager=(WindowManager)mContext.getSystemService(Context.WINDOW_SERVICE);
+//                int orientacion =windowManager.getDefaultDisplay().getRotation();
+//                switch(orientacion){
+//                    case Surface.ROTATION_0:
+//                        break;
+//                    case Surface.ROTATION_90:
+//                        break;
+//                    case Surface.ROTATION_180:
+//                        break;
+//                    case Surface.ROTATION_270:
+//                        break;
+//                }
+//            }
             mIsRotating=true;
             mIsScaling=false;
-        }else{
+        }else if(mode == touchMode){
             sm.unregisterListener(this, sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR));
             Log.e("GYRO", "gyro unregistered");
             mIsRotating=false;
             medicionInicial=true;
+        }else{
+//            sm.registerListener(this,sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR), SensorManager.SENSOR_DELAY_FASTEST);
         }
     }
 }
